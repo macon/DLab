@@ -1,0 +1,43 @@
+﻿<Window x:Class="DLab.Views.ShellView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DLab.Views"
+        xmlns:infrastructure="clr-namespace:DLab.Infrastructure"
+        xmlns:converters="clr-namespace:DLab.Converters"
+        Title="ShellView"
+        Height="300" Width="600" ShowInTaskbar="False" WindowStyle="ToolWindow" >
+    
+    <Window.Resources>
+        <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
+    </Window.Resources>
+
+    <Window.Visibility>
+        <Binding Path="IsHidden" Mode="TwoWay" Converter="{StaticResource BoolToHiddenConverter}"/>
+    </Window.Visibility>
+
+    <Window.InputBindings>
+        <KeyBinding Key="Escape" Command="{x:Static local:CloseThisWindowCommand.Instance}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" />
+    </Window.InputBindings>
+    
+    <DockPanel>
+        <infrastructure:NotifyIcon
+			x:Name="notifyIcon"
+			Text="Stamper"
+			Icon="pack://application:,,,/Dlab;component/Resources/ancore-26.png"
+			BalloonTipText="Stamper"
+			BalloonTipTitle="Stamper"
+			BalloonTipIcon="Info"
+			MouseDoubleClick="OnNotifyIconDoubleClick">
+            <infrastructure:NotifyIcon.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Command" Click="OnOpenClick" InputGestureText="Ctrl+Alt+Space" />
+                    <MenuItem Header="Clipboard" Click="OnOpenClipboardClick" InputGestureText="Ctrl+Alt+C" />
+                    <MenuItem Header="Exit" Click="OnExitClick" />
+                </ContextMenu>
+            </infrastructure:NotifyIcon.ContextMenu>
+        </infrastructure:NotifyIcon>
+        
+        <Button DockPanel.Dock="Bottom" Name="Settings" Content="Settings" Width="80" Height="25" HorizontalAlignment="Right" />
+        <ContentControl Name="TabViewModel"/>
+    </DockPanel>
+</Window>

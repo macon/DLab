@@ -1,0 +1,37 @@
+﻿<UserControl x:Class="DLab.Views.SettingsFolderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Bottom">
+            <Button Name="Save" Content="Save" Width="80" Height="25" Margin="0 0 5 0"/>
+        </WrapPanel>
+
+        <Border DockPanel.Dock="Bottom">
+            <DockPanel>
+                <WrapPanel DockPanel.Dock="Top">
+                    <CheckBox Name="SelectedFolder_Subdirectory"/>
+                    <Label>Subfolder?</Label>
+                </WrapPanel>
+
+                <WrapPanel>
+                    <Label>Extensions:</Label>
+                    <TextBox Name="SelectedFolder_DisplayPattern" MaxLines="10"></TextBox>
+                </WrapPanel>
+            </DockPanel>
+        </Border>
+
+        <DockPanel DockPanel.Dock="Top">
+            <Button Name="AddSpecialFolder" DockPanel.Dock="Right" Width="25" Height="25" Content="S" ToolTip="Special folder" Margin="0 0 2 0"/>
+            <Button Name="RemoveFolder" DockPanel.Dock="Right" Width="25" Height="25" Content="-" ToolTip="Remove folder" Margin="0 0 2 0"/>
+            <Button Name="AddFolder" DockPanel.Dock="Right" Width="25" Height="25" Content="+" ToolTip="Add folder" Margin="0 0 2 0"/>
+            <Label HorizontalAlignment="Left">Folders:</Label>
+        </DockPanel>
+
+        <ListBox Name="Folders" DisplayMemberPath="FolderName" DockPanel.Dock="Left" HorizontalAlignment="Stretch"/>
+
+    </DockPanel>
+</UserControl>
