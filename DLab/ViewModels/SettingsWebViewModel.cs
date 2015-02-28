@@ -44,6 +44,13 @@ namespace DLab.ViewModels
             WebSpecs.Remove(SelectedWebSpec);
         }
 
+        public void Clear()
+        {
+            _catalog.Clear<WebSpec>();
+            _catalog.Flush();
+            InitialiseWebSpecs();
+        }
+
         public void Save()
         {
             foreach (var viewModel in WebSpecs.Where(x => x.Unsaved || x.IsDirty))

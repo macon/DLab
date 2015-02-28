@@ -67,8 +67,8 @@ namespace DLab.Domain
                 .Select(x => x.LazyValue.Value)
                 .OrderByDescending(x => x.Priority);
 
-            var r1 = webCommands.Select(x => new MatchResult(x));
-            var r2 = r1.Concat(fileCommands.Select(x => new MatchResult(x)));
+            var r1 = webCommands.Select(x => new MatchResult(x) {CommandType = CommandType.Uri});
+            var r2 = r1.Concat(fileCommands.Select(x => new MatchResult(x) { CommandType = CommandType.File}));
 
             return r2.Take(pageSize).ToList();
         }

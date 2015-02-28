@@ -20,24 +20,32 @@
     </Window.InputBindings>
     
     <DockPanel>
+        <DockPanel.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </DockPanel.Resources>
+
         <infrastructure:NotifyIcon
 			x:Name="notifyIcon"
-			Text="Stamper"
+			Text="Control Freak"
 			Icon="pack://application:,,,/Dlab;component/Resources/ancore-26.png"
-			BalloonTipText="Stamper"
-			BalloonTipTitle="Stamper"
+			BalloonTipText="Control Freak"
+			BalloonTipTitle="Control Freak"
 			BalloonTipIcon="Info"
 			MouseDoubleClick="OnNotifyIconDoubleClick">
             <infrastructure:NotifyIcon.ContextMenu>
                 <ContextMenu>
-                    <MenuItem Header="Command" Click="OnOpenClick" InputGestureText="Ctrl+Alt+Space" />
+                    <MenuItem Header="Command" Click="OnOpenClick" InputGestureText="Alt+Space" />
                     <MenuItem Header="Clipboard" Click="OnOpenClipboardClick" InputGestureText="Ctrl+Alt+C" />
                     <MenuItem Header="Exit" Click="OnExitClick" />
                 </ContextMenu>
             </infrastructure:NotifyIcon.ContextMenu>
         </infrastructure:NotifyIcon>
         
-        <Button DockPanel.Dock="Bottom" Name="Settings" Content="Settings" Width="80" Height="25" HorizontalAlignment="Right" />
+        <WrapPanel DockPanel.Dock="Bottom">
+            <Label Name="SystemStatus" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"></Label>
+            <Button Name="Settings" Content="Settings" Width="80" Height="25" HorizontalAlignment="Right" />
+        </WrapPanel>
+        
         <ContentControl Name="TabViewModel"/>
     </DockPanel>
 </Window>

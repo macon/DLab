@@ -1,10 +1,11 @@
 ﻿namespace DLab.Domain
 {
 
-    public class WebSpec : ISetPriority
+    public class WebSpec : EntityBase
     {
         public WebSpec()
         {
+            Uri = "";
         }
 
         public WebSpec(string command, string uri)
@@ -14,9 +15,8 @@
         }
 
         public int Id { get; set; }
-        public string Command { get; set; }
         public string Uri { get; set; }
-        public int Priority { get; set; }
+        public override string Target { get { return Uri; } }
 
         public void SetId()
         {
@@ -31,5 +31,18 @@
     {
         int Priority { get; set; }
         string Command { get; }
+        string Target { get; set; }
+    }
+
+    public class EntityBase : ISetPriority
+    {
+        public EntityBase()
+        {
+            Command = "";
+            Target = "";
+        }
+        public virtual int Priority { get; set; }
+        public virtual string Command { get; set; }
+        public virtual string Target { get; set; }
     }
 }

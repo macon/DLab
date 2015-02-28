@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Wintellect.Sterling.Serialization;
 
@@ -29,19 +30,30 @@ namespace DLab.Domain
         public List<string> Extensions { get; set; }
         public bool Subdirectory { get; set; }
 
-        public string SearchPattern()
+        [SterlingIgnore]
+        public string SearchPattern
         {
-            return Extensions.Aggregate((s1, s2) => Combine(s1, ";", s2));
+            get { return Extensions.Aggregate((s1, s2) => Combine(s1, ";", s2)); }
         }
 
-        [SterlingIgnore]
-        public string DisplayPattern
+        public void SetExtensions(string extensions)
         {
-            get
-            {
-                return Extensions.Aggregate((s1, s2) => Combine(s1, "\n", s2));
-            }
+            if (string.IsNullOrEmpty(extensions)) return;
+            var parts = extensions.Split(new[]{';'}, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0) return;
+
+            Extensions.Clear();
+            Extensions.AddRange(parts);
         }
+
+//        [SterlingIgnore]
+//        public string DisplayPattern
+//        {
+//            get
+//            {
+//                return Extensions.Aggregate((s1, s2) => Combine(s1, "\n", s2));
+//            }
+//        }
 
         private string Combine(string s1, string separator, string s2)
         {

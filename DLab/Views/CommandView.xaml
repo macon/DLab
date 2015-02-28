@@ -27,8 +27,8 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel cal:View.Model="{Binding}">
-                            <TextBlock Text="{Binding Path=Filename}" ></TextBlock>
-                            <TextBlock Text="{Binding Path=FolderPath}" Margin="10 0 0 0" Foreground="CadetBlue"></TextBlock>
+                            <TextBlock Text="{Binding Path=CommandModel.Command}" ></TextBlock>
+                            <TextBlock Text="{Binding Path=CommandModel.Target}" Margin="10 0 0 0" Foreground="CadetBlue"></TextBlock>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

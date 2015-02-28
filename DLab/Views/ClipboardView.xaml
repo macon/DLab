@@ -4,16 +4,36 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:behaviours="clr-namespace:DLab.Behaviours"
+             xmlns:cal="http://www.caliburnproject.org"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              behaviours:FocusBehavior.FocusFirst="true">
     <DockPanel>
         <DockPanel.Resources>
-            <ControlTemplate x:Key="blankButton" TargetType="{x:Type Button}" />
+            <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
+
+            <DataTemplate x:Key="ClipboardItemTemplate">
+                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}"></Label>
+            </DataTemplate>
+
+            <Style TargetType="{x:Type ListBoxItem}">
+                <Style.Triggers>
+                    <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                        <Setter Property="Background" Value="#19f39611"></Setter>
+                    </Trigger>
+                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                        <Setter Property="Background" Value="#19000000"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
         </DockPanel.Resources>
 
         <TextBox Name="SearchText" DockPanel.Dock="Bottom" Height="20" HorizontalAlignment="Stretch"></TextBox>
-        <Button Name="Paste" DockPanel.Dock="Bottom" Height="20" Content="Paste" IsDefault="True" Template="{StaticResource blankButton}"/>
-        <ListBox Name="ClipboardItems" TabIndex="0"/>
+        <Button Name="Paste" DockPanel.Dock="Bottom" Height="20" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
+        <ListBox Name="ClipboardItems" 
+                 TabIndex="0" 
+                 ItemTemplate="{StaticResource ClipboardItemTemplate}" 
+                 KeyUp="ClipboardItems_OnKeyUp"
+                 AlternationCount="2"/>
     </DockPanel>
 </UserControl>

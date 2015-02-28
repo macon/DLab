@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Caliburn.Micro;
@@ -12,7 +13,6 @@ namespace DLab.ViewModels
         private readonly IEventAggregator _eventAggregator;
         private string _title;
         private BindableCollection<MatchResult> _matchedItems;
-        private string _selectedCommand;
         private string _userCommand;
         private MatchResult _selectedMatch;
 
@@ -83,11 +83,20 @@ namespace DLab.ViewModels
         public void RunCommand()
         {
             if (SelectedMatchedItem == null) return;
-//            Process.Start(SelectedMatchedItem);
-            MessageBox.Show("Would run: " + SelectedMatchedItem.CommandModel.Command);
-            (SelectedMatchedItem as ISetPriority).Priority++;
-            _catalog.Save(SelectedMatchedItem.CommandModel);
+
+            (SelectedMatchedItem.CommandModel as ISetPriority).Priority++;
+
+            if (SelectedMatchedItem.CommandModel is WebSpec)
+            {
+                _catalog.Save(SelectedMatchedItem.CommandModel as WebSpec);
+            }
+            else
+            {
+                _catalog.Save(SelectedMatchedItem.CommandModel as CatalogEntry);
+            }
             _catalog.Flush();
+
+            Process.Start(SelectedMatchedItem.CommandModel.Target);
 
             _eventAggregator.Publish(new UserActionEvent(), Execute.BeginOnUIThread);
         }

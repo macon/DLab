@@ -11,7 +11,7 @@ namespace DLab.Domain
 
     public class MatchResult
     {
-        public MatchResult(ISetPriority commandModel)
+        public MatchResult(EntityBase commandModel)
         {
             CommandModel = commandModel;
         }
@@ -21,20 +21,17 @@ namespace DLab.Domain
         }
 
         public CommandType CommandType { get; set; }
-        public ISetPriority CommandModel { get; private set; }
+        public EntityBase CommandModel { get; private set; }
     }
 
-    public class CatalogEntry : ISetPriority
+    public class CatalogEntry : EntityBase
     {
         public int Id { get; set; }
         public string FolderPath { get; set; }
         public string Filename { get; set; }
-        public int Priority { get; set; }
 
-        public string Command
-        {
-            get { return Fullname(); }
-        }
+        public override string Target { get { return Fullname(); } }
+        public override string Command { get { return Filename; } }
 
         public CatalogEntry()
         {}

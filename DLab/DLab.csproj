@@ -73,6 +73,9 @@
     <Reference Include="Wintellect.Sterling.Server.FileSystem">
       <HintPath>..\packages\Sterling.1.6.2\lib\net40\Wintellect.Sterling.Server.FileSystem.dll</HintPath>
     </Reference>
+    <Reference Include="WpfAnimatedGif">
+      <HintPath>..\packages\WpfAnimatedGif.1.4.12\lib\net\WpfAnimatedGif.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -82,6 +85,7 @@
     <Compile Include="Behaviours\FocusBehaviour.cs" />
     <Compile Include="CatalogData\CatalogDatabaseInstance.cs" />
     <Compile Include="Domain\WebSpec.cs" />
+    <Compile Include="Events\SystemStatusChangeEvent.cs" />
     <Compile Include="ViewModels\FolderSpecViewModel.cs" />
     <Compile Include="Infrastructure\CustomHotkey.cs" />
     <Compile Include="Infrastructure\HotKey.cs" />
@@ -102,6 +106,7 @@
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\SettingsWebViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
+    <Compile Include="ViewModels\SystemState.cs" />
     <Compile Include="ViewModels\TabViewModel.cs" />
     <Compile Include="Converters\BoolToHiddenConverter.cs" />
     <Compile Include="Events\ClipboardChangedEventArgs.cs" />
@@ -210,6 +215,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\ancore-26.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Doom_monster.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

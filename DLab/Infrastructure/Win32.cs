@@ -6,6 +6,21 @@ namespace DLab.Infrastructure
 {
     internal static class Win32
     {
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetLastActivePopup(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        const uint GA_PARENT = 1;
+        const uint GA_ROOT = 2;
+        const uint GA_ROOTOWNER = 3;
+
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool AddClipboardFormatListener(IntPtr hwnd);
@@ -20,11 +35,18 @@ namespace DLab.Infrastructure
         /// </summary>
         internal const int WM_DRAWCLIPBOARD = 0x0308;
 
+        internal const int WM_USER = 0x0400;
+        internal const int WM_USER_CLIPBOARD_CONTROL = WM_USER + 1;
+        internal const int WM_PASTE = 0x0302;
         /// <summary>
         /// A clipboard viewer window receives the WM_CHANGECBCHAIN message when 
         /// another window is removing itself from the clipboard viewer chain.
         /// </summary>
-        internal const int WM_CHANGECBCHAIN = 0x030D;
+        internal const int WM_CHANGECBCHAIN = 0x030D;[return: MarshalAs(UnmanagedType.Bool)]
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern bool PostMessage(HandleRef hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern IntPtr SetClipboardViewer(IntPtr hWndNewViewer);
@@ -33,13 +55,16 @@ namespace DLab.Infrastructure
         internal static extern bool ChangeClipboardChain(IntPtr hWndRemove, IntPtr hWndNewNext);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+        internal static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, [MarshalAs(UnmanagedType.LPStr)] string lParam);
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
         internal static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+
+        [DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+        internal static extern int GetWindowTextLength(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool BringWindowToTop(IntPtr hWnd);
@@ -64,6 +89,15 @@ namespace DLab.Infrastructure
                 get { return Marshal.SizeOf(typeof(INPUT)); }
             }
         }
+
+        public static string GetWindowTitle(IntPtr hWnd)
+        {
+            // Allocate correct string length first
+            var length = GetWindowTextLength(hWnd);
+            var sb = new StringBuilder(length + 1);
+            GetWindowText(hWnd, sb, sb.Capacity);
+            return sb.ToString();
+        } 
 
         [StructLayout(LayoutKind.Explicit)]
         internal struct InputUnion

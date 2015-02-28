@@ -1,14 +1,17 @@
 ﻿using Caliburn.Micro;
+using DLab.Events;
 using StructureMap;
 
 namespace DLab.ViewModels
 {
-    public class ShellViewModel : Screen, IHandle<UserActionEvent>
+    public class ShellViewModel : Screen, IHandle<UserActionEvent>, IHandle<SystemStatusChangeEvent>
     {
         private readonly IWindowManager _windowManager;
         private readonly IEventAggregator _eventAggregator;
         private readonly IViewModelFactory _viewModelFactory;
         private bool _isHidden;
+        private SettingsViewModel _settingViewModel;
+        private bool _isBusy;
         public Screen TabViewModel { get; set; }
 
         public bool IsHidden
@@ -17,6 +20,16 @@ namespace DLab.ViewModels
             set
             {
                 _isHidden = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
+        public bool IsBusy
+        {
+            get { return _isBusy; }
+            set
+            {
+                _isBusy = value;
                 NotifyOfPropertyChange();
             }
         }
@@ -33,8 +46,9 @@ namespace DLab.ViewModels
 
         public void Settings()
         {
-            var settingViewModel = _viewModelFactory.GetViewModel<SettingsViewModel>();
-            var result = _windowManager.ShowDialog(settingViewModel);
+            if (_settingViewModel == null) { _settingViewModel = _viewModelFactory.GetViewModel<SettingsViewModel>(); }
+
+            _windowManager.ShowDialog(_settingViewModel);
         }
 
         public void ClipboardChanged()
@@ -45,6 +59,11 @@ namespace DLab.ViewModels
         public void Handle(UserActionEvent message)
         {
             IsHidden = true;
+        }
+
+        public void Handle(SystemStatusChangeEvent message)
+        {
+            IsBusy = message.State != SystemState.Idle;
         }
     }
 

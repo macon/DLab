@@ -8,14 +8,15 @@ namespace DLab.ViewModels
     public class FolderSpecViewModel : Screen
     {
         private readonly FolderSpec _innerFolderSpec;
-        public bool IsDirty { get; private set; }
+        private readonly ICatalog _catalog;
 
         public FolderSpec Instance { get { return _innerFolderSpec; } }
 
-        public FolderSpecViewModel(FolderSpec innerFolderSpec)
+        public FolderSpecViewModel(FolderSpec innerFolderSpec, ICatalog catalog)
         {
             if (innerFolderSpec == null) throw new ArgumentNullException("innerFolderSpec");
             _innerFolderSpec = innerFolderSpec;
+            _catalog = catalog;
         }
 
         public bool Subdirectory
@@ -25,19 +26,20 @@ namespace DLab.ViewModels
             {
                 if (_innerFolderSpec.Subdirectory == value) return;
                 _innerFolderSpec.Subdirectory = value;
-                IsDirty = true;
+                _catalog.Save(_innerFolderSpec);
                 NotifyOfPropertyChange();
             }
         }
 
-        public List<string> Extensions
+        public string Extensions
         {
-            get { return _innerFolderSpec.Extensions; }
+            get { return _innerFolderSpec.SearchPattern; }
             set
             {
-                if (_innerFolderSpec.Extensions == value) return;
-                _innerFolderSpec.Extensions = value;
-                IsDirty = true;
+                if (_innerFolderSpec.SearchPattern == value) return;
+
+                _innerFolderSpec.SetExtensions(value);
+                _catalog.Save(_innerFolderSpec);
                 NotifyOfPropertyChange();
             }
         }

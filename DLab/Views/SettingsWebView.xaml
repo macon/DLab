@@ -10,6 +10,7 @@
             <Button Name="Add" Content="+"/>
             <Button Name="Remove" Content="-"/>
             <Button Name="Save" Content="Save"/>
+            <Button Name="Clear" Content="Clear"/>
         </WrapPanel>
         
         <DataGrid Name="WebSpecs" AutoGenerateColumns="False">

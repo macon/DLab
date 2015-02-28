@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -42,8 +43,15 @@ namespace DLab.Views
         private void InitializeApp()
         {
             Loaded += ShellView_Loaded;
-            _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToCommand);
-            _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToClipboard);
+            Application.Current.Deactivated += Current_Deactivated;
+//            _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToCommand);
+            _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Alt, true, SetFocusToCommand);
+            _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Alt, true, SetFocusToClipboard);
+        }
+
+        void Current_Deactivated(object sender, EventArgs e)
+        {
+            _vm.IsHidden = true;
         }
 
         private void OnNotifyIconDoubleClick(object sender, MouseButtonEventArgs e)
@@ -76,6 +84,8 @@ namespace DLab.Views
                 return;
             }
 
+            Loaded -= ShellView_Loaded;
+            Application.Current.Deactivated -= Current_Deactivated;
             _hotKeyHost.RemoveHotKey(_showCommandHotKey);
             _hotKeyHost.RemoveHotKey(_showClipboardHotKey);
             Win32.RemoveClipboardFormatListener(_hWndSource.Handle);
@@ -111,12 +121,19 @@ namespace DLab.Views
 
         private void SetFocusToClipboard()
         {
+            ClientHwnd = GetPreviousWindow();
+
             SetFocus(1, () =>
             {
                 var view = TabViewModel.Content as TabView;
-                var child = FindChild<ListBox>(view.Items, "ClipboardItems");
-                child.SelectedIndex = 0;
-                child.Focus();
+                var clipboardItems = FindChild<ListBox>(view.Items, "ClipboardItems");
+
+                clipboardItems.Focus();
+                clipboardItems.SelectedIndex = 0;
+
+                clipboardItems.UpdateLayout();
+                var clipboardItem = (ListBoxItem) clipboardItems.ItemContainerGenerator.ContainerFromItem(clipboardItems.SelectedItem);
+                clipboardItem.Focus();
             });
         }
 
@@ -192,6 +209,24 @@ namespace DLab.Views
             return foundChild;
         }
 
+        public IntPtr GetPreviousWindow()
+        {
+            var activeAppWindow = Win32.GetForegroundWindow();
+            if (activeAppWindow == IntPtr.Zero)
+                return IntPtr.Zero;
+
+            var prevAppWindow = Win32.GetLastActivePopup(activeAppWindow);
+            return Win32.IsWindowVisible(prevAppWindow) ? prevAppWindow : IntPtr.Zero;
+        }
+
+        public void FocusToPreviousWindow()
+        {
+            var prevWindow = GetPreviousWindow();
+            if (prevWindow != IntPtr.Zero)
+                Win32.SetForegroundWindow(prevWindow);
+        }
+
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -199,8 +234,10 @@ namespace DLab.Views
             _hWndSource = HwndSource.FromHwnd(wih.Handle);
 
             _hWndSource.AddHook(WndProc);
-            var result = Win32.AddClipboardFormatListener(_hWndSource.Handle);
+            Win32.AddClipboardFormatListener(_hWndSource.Handle);
         }
+
+        public static string ActiveClipboardString { get; set; }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
@@ -209,6 +246,7 @@ namespace DLab.Views
             switch (msg)
             {
                 case  WM_CLIPBOARDUPDATE:
+//                    if (!ShouldCapture) return IntPtr.Zero;
                     DrawContent();
                     break;
             }
@@ -220,8 +258,10 @@ namespace DLab.Views
         {
             if (Clipboard.ContainsText())
             {
+                var s = Clipboard.GetText();
+                if (s.Equals(ActiveClipboardString, StringComparison.InvariantCultureIgnoreCase)) return;
+
                 // we have some text in the clipboard.
-                var t = Win.Clipboard.GetText();
                 if (_vm != null)
                 {
                     _vm.ClipboardChanged();

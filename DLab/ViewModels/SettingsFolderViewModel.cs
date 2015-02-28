@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Caliburn.Micro;
 using DLab.Domain;
+using DLab.Events;
 using Ookii.Dialogs.Wpf;
 
 namespace DLab.ViewModels
@@ -11,18 +14,21 @@ namespace DLab.ViewModels
     public class SettingsFolderViewModel : Screen, ISettingsViewModel
     {
         private readonly ICatalog _catalog;
+        private readonly IEventAggregator _eventAggregator;
         private bool _includeSubfolders;
         private FolderSpecViewModel _selectedFolder;
-        private State _state;
+        private SystemState _systemState;
+        private bool _isScanning;
         private List<FolderSpec> MasterFolders { get; set; }
         public BindableCollection<string> ScannedItems { get; set; }
         public BindableCollection<FolderSpecViewModel> Folders { get; private set; }
         private List<CatalogEntry> CatalogFiles { get; set; }
 
-        public SettingsFolderViewModel(ICatalog catalog)
+        public SettingsFolderViewModel(ICatalog catalog, IEventAggregator eventAggregator)
         {
             MasterFolders = new List<FolderSpec>();
             _catalog = catalog;
+            _eventAggregator = eventAggregator;
             DisplayName = "Folders";
             ScannedItems = new BindableCollection<string>();
             Folders = new BindableCollection<FolderSpecViewModel>();
@@ -49,7 +55,7 @@ namespace DLab.ViewModels
 
             var r = _catalog.Folders();
             MasterFolders.AddRange(r);
-            Folders.AddRange(MasterFolders.Select(x => new FolderSpecViewModel(x)));
+            Folders.AddRange(MasterFolders.Select(x => new FolderSpecViewModel(x, _catalog)));
             SelectedFolder = Folders.FirstOrDefault();
         }
 
@@ -82,7 +88,7 @@ namespace DLab.ViewModels
 
             var newFolderSpec = new FolderSpec(s.SelectedPath);
             MasterFolders.Add(newFolderSpec);
-            Folders.Add(new FolderSpecViewModel(newFolderSpec));
+            Folders.Add(new FolderSpecViewModel(newFolderSpec, _catalog));
 
             _catalog.Save(newFolderSpec);
             _catalog.Flush();
@@ -111,14 +117,14 @@ namespace DLab.ViewModels
 
         public bool CanSave()
         {
-            return _state == State.Idle;
+            return _systemState == SystemState.Idle;
         }
 
         private Task<int> ScanAndSave()
         {
             return new Task<int>(() =>
             {
-                UpdateFoldersAsync();
+//                UpdateFolders();
 
                 Scan();
 
@@ -127,18 +133,35 @@ namespace DLab.ViewModels
             });
         }
 
+        public bool IsScanning
+        {
+            get { return _isScanning; }
+            set
+            {
+                _isScanning = value;
+                NotifyOfPropertyChange();
+            }
+        }
+
+        public async void ScanIt()
+        {
+            _eventAggregator.Publish(new SystemStatusChangeEvent(SystemState.Scanning), Execute.BeginOnUIThread);
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            _eventAggregator.Publish(new SystemStatusChangeEvent(SystemState.Idle), Execute.BeginOnUIThread);
+        }
+
         public async void Save()
         {
             try
             {
-                _state = State.Saving;
+                _systemState = SystemState.Saving;
                 var t = ScanAndSave();
                 t.Start();
                 await t;
             }
             finally
             {
-                _state = State.Idle;
+                _systemState = SystemState.Idle;
             }
         }
 
@@ -156,21 +179,20 @@ namespace DLab.ViewModels
             return Task.FromResult(1);
         }
 
-        private void UpdateFoldersAsync()
-        {
-            var savesMade = false;
-            foreach (var folder in Folders.Where(x => x.IsDirty))
-            {
-                _catalog.Save(folder.Instance);
-                savesMade = true;
-            }
-            if (savesMade) _catalog.Flush();
-            return;
-        }
+//        private void UpdateFolders()
+//        {
+//            var needFlush = false;
+//            foreach (var folder in Folders.Where(x => x.IsDirty))
+//            {
+//                _catalog.SaveNoFlush(folder.Instance);
+//                needFlush = true;
+//            }
+//            if (needFlush) _catalog.Flush();
+//        }
 
-        public bool IsDirty
-        {
-            get { return Folders.Any(x => x.IsDirty); }
-        }
+//        public bool IsDirty
+//        {
+//            get { return Folders.Any(x => x.IsDirty); }
+//        }
     }
 }
