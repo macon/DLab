@@ -22,18 +22,23 @@
                         <Setter Property="Background" Value="#19f39611"></Setter>
                     </Trigger>
                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                        <Setter Property="Background" Value="#19000000"></Setter>
+                        <Setter Property="Background" Value="White"></Setter>
                     </Trigger>
                 </Style.Triggers>
             </Style>
         </DockPanel.Resources>
 
-        <TextBox Name="SearchText" DockPanel.Dock="Bottom" Height="20" HorizontalAlignment="Stretch"></TextBox>
-        <Button Name="Paste" DockPanel.Dock="Bottom" Height="20" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
-        <ListBox Name="ClipboardItems" 
-                 TabIndex="0" 
-                 ItemTemplate="{StaticResource ClipboardItemTemplate}" 
-                 KeyUp="ClipboardItems_OnKeyUp"
-                 AlternationCount="2"/>
+		<StackPanel DockPanel.Dock="Bottom" behaviours:AccessKeyScoper.IsAccessKeyScope="True">
+			<TextBox Name="SearchText" Height="20" HorizontalAlignment="Stretch"></TextBox>
+			<Button Name="Search" Height="20" Content="Search" IsDefault="True" Template="{StaticResource BlankButton}"/>
+		</StackPanel>
+
+		<StackPanel behaviours:AccessKeyScoper.IsAccessKeyScope="True">
+			<Button Name="Paste" DockPanel.Dock="Bottom" Height="20" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
+			<ListBox Name="ClipboardItems" 
+					 TabIndex="0" 
+					 ItemTemplate="{StaticResource ClipboardItemTemplate}" 
+					 AlternationCount="2"/>
+		</StackPanel>
     </DockPanel>
 </UserControl>

@@ -26,10 +26,10 @@
 
         <infrastructure:NotifyIcon
 			x:Name="notifyIcon"
-			Text="Control Freak"
+			Text="Gadget"
 			Icon="pack://application:,,,/Dlab;component/Resources/ancore-26.png"
-			BalloonTipText="Control Freak"
-			BalloonTipTitle="Control Freak"
+			BalloonTipText="Gadget"
+			BalloonTipTitle="Gadget"
 			BalloonTipIcon="Info"
 			MouseDoubleClick="OnNotifyIconDoubleClick">
             <infrastructure:NotifyIcon.ContextMenu>

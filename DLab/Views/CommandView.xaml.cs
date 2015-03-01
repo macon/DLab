@@ -17,8 +17,12 @@ namespace DLab.Views
         {
             if (e.Key != Key.Down || MatchedItems.Items.Count <= 0) return;
 
-            MatchedItems.Focus();
-            MatchedItems.SelectedIndex = 0;
+			MatchedItems.Focus();
+			MatchedItems.SelectedIndex = 0;
+
+			MatchedItems.UpdateLayout();
+			var matchedItem = (ListBoxItem)MatchedItems.ItemContainerGenerator.ContainerFromItem(MatchedItems.SelectedItem);
+			matchedItem.Focus();
         }
 
         private void MatchedItems_OnPreviewTextInput(object sender, TextCompositionEventArgs e)

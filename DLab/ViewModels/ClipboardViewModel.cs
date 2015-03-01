@@ -10,39 +10,10 @@ using Screen = Caliburn.Micro.Screen;
 
 namespace DLab.ViewModels
 {
-    public class ClipboardItem
-    {
-        public const int LineLength = 200;
-        public string Text { get; set; }
-
-        public ClipboardItem(string text)
-        {
-            Text = text;
-        }
-
-        public string DisplayText
-        {
-            get
-            {
-                var parts = Text.Split(new[]{'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
-
-                return parts.Length > 1 
-                    ? string.Format("{0}\n{1}{2}", ParseLine(parts[0]), ParseLine(parts[1]), parts.Length>2 ? "..." : "") 
-                    : ParseLine(parts[0]);
-            }
-        }
-
-        private string ParseLine(string text)
-        {
-            return text.Length > LineLength ? string.Format("{0}...", text.Substring(0, LineLength)) : text;
-        }
-    }
-
-
-    public class ClipboardViewModel : Screen, ITabViewModel, IHandle<ClipboardChangedEvent>
+	public class ClipboardViewModel : Screen, ITabViewModel, IHandle<ClipboardChangedEvent>
     {
         private readonly IEventAggregator _eventAggregator;
-        private ClipboardItem _selectedClipboardItem;
+        private ClipboardItemViewModel _selectedClipboardItemViewModel;
         private static bool _isWritingToClipboard;
 
         public ClipboardViewModel(IEventAggregator eventAggregator)
@@ -51,14 +22,14 @@ namespace DLab.ViewModels
             _eventAggregator.Subscribe(this);
             DisplayName = "Clipboard";
 
-            ClipboardItems = new BindableCollection<ClipboardItem>();
+            ClipboardItems = new BindableCollection<ClipboardItemViewModel>();
             if (Clipboard.ContainsText())
             {
-                ClipboardItems.Add(new ClipboardItem(Clipboard.GetText()));
+                ClipboardItems.Add(new ClipboardItemViewModel(Clipboard.GetText()));
             }
         }
 
-        public BindableCollection<ClipboardItem> ClipboardItems { get; set; }
+        public BindableCollection<ClipboardItemViewModel> ClipboardItems { get; set; }
 
         public int Order
         {
@@ -68,12 +39,20 @@ namespace DLab.ViewModels
         public void Handle(ClipboardChangedEvent message)
         {
             if (!Clipboard.ContainsText()) return;
+
+	        var clipboardText = Clipboard.GetText();
+	        if (ClipboardItems.Any(x => x.Text.Equals(clipboardText, StringComparison.InvariantCultureIgnoreCase)))
+	        {
+		        BringItemToTop(clipboardText);
+				return;
+	        }
+
             Debug.WriteLine("Writing to clipboard from thread {0}", Thread.CurrentThread.ManagedThreadId);
-            ClipboardItems.Insert(0, new ClipboardItem(Clipboard.GetText()));
-            SelectedClipboardItem = ClipboardItems.First();
+            ClipboardItems.Insert(0, new ClipboardItemViewModel(Clipboard.GetText()));
+            SelectedClipboardItemViewModel = ClipboardItems.First();
         }
 
-        public void SetClipboardBlind(string text)
+	    public void SetClipboardBlind(string text)
         {
             var s = Clipboard.ContainsText() ? Clipboard.GetText() : "";
             if (Clipboard.ContainsText() && s.Equals(text, StringComparison.InvariantCultureIgnoreCase)) { return; }
@@ -82,28 +61,36 @@ namespace DLab.ViewModels
             Clipboard.SetText(text);
         }
 
+		public void Search(string searchText)
+		{
+			
+		}
+
         public void Paste()
         {
-            Debug.WriteLine("clipboard text: {0}", new object[] {SelectedClipboardItem});
-            SetClipboardBlind(SelectedClipboardItem.Text);
+            Debug.WriteLine("clipboard text: {0}", new object[] {SelectedClipboardItemViewModel});
+            SetClipboardBlind(SelectedClipboardItemViewModel.Text);
 
             var title = Win32.GetWindowTitle(ShellView.ClientHwnd);
             Debug.WriteLine("target window title: {0}", new object[] { title });
 
             SendPasteToClient();
-
-            // re-arrange clipboard listview if needed
-            var oldIndex = ClipboardItems.IndexOf(SelectedClipboardItem);
-            if (oldIndex != 0)
-            {
-                ClipboardItems.Move(oldIndex, 0);
-                NotifyOfPropertyChange("ClipboardItems");
-            }
-
+			BringItemToTop(SelectedClipboardItemViewModel.Text);
             _eventAggregator.Publish(new UserActionEvent(), Execute.OnUIThread);
         }
 
-        private static void SendPasteToClient()
+	    private void BringItemToTop(string clipboardText)
+	    {
+		    var matchedItem = ClipboardItems.FirstOrDefault(x => x.Text.Equals(clipboardText, StringComparison.InvariantCultureIgnoreCase));
+		    if (matchedItem == null) return;
+
+		    var oldIndex = ClipboardItems.IndexOf(matchedItem);
+		    if (oldIndex == 0) return;
+
+		    ClipboardItems.Move(oldIndex, 0);
+	    }
+
+	    private static void SendPasteToClient()
         {
             Win32.BringWindowToTop(ShellView.ClientHwnd);
 
@@ -133,12 +120,12 @@ namespace DLab.ViewModels
             Win32.SendInput(1, new[] {ip}, Win32.INPUT.Size);
         }
         
-        public ClipboardItem SelectedClipboardItem
+        public ClipboardItemViewModel SelectedClipboardItemViewModel
         {
-            get { return _selectedClipboardItem; }
+            get { return _selectedClipboardItemViewModel; }
             set
             {
-                _selectedClipboardItem = value;
+                _selectedClipboardItemViewModel = value;
                 NotifyOfPropertyChange();
             }
         }
