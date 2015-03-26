@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
+using System.Windows.Threading;
 using Caliburn.Micro;
 using DLab.CatalogData;
 using DLab.Domain;
 using DLab.ViewModels;
+using log4net.Config;
 using StructureMap;
 using StructureMap.Graph;
 using Wintellect.Sterling;
 using Wintellect.Sterling.Server.FileSystem;
+using LogManager = log4net.LogManager;
 
 namespace DLab
 {
@@ -35,6 +38,7 @@ namespace DLab
         protected override void OnStartup(object sender, StartupEventArgs e)
         {
             base.OnStartup(sender, e);
+
             InitialiseStorage();
 
             _container = new Container(x =>
@@ -103,6 +107,13 @@ namespace DLab
         protected override IEnumerable<Assembly> SelectAssemblies()
         {
             return new[] { Assembly.GetExecutingAssembly() };
+        }
+
+        protected override void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            base.OnUnhandledException(sender, e);
+            var logger = LogManager.GetLogger(GetType());
+            logger.Error(e.Exception);
         }
     }
 }

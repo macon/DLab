@@ -1034,5 +1034,35 @@ namespace DLab.Infrastructure
             PA1 = 0,
             OEM_CLEAR = 0,
         }
+
+        internal static void SendPasteToClient(IntPtr clientHwnd)
+        {
+            BringWindowToTop(clientHwnd);
+
+            var ip = new Win32.INPUT { type = INPUT_KEYBOARD };
+            ip.U.ki.wScan = 0;
+            ip.U.ki.time = 0;
+            ip.U.ki.dwExtraInfo = new UIntPtr(0);
+
+            // press CTRL key
+            ip.U.ki.wVk = VirtualKeyShort.CONTROL;
+            ip.U.ki.dwFlags = 0;
+            SendInput(1, new[] { ip }, INPUT.Size);
+
+            // press V key
+            ip.U.ki.wVk = VirtualKeyShort.KEY_V;
+            ip.U.ki.dwFlags = 0;
+            SendInput(1, new[] { ip }, INPUT.Size);
+
+            // release V key
+            ip.U.ki.wVk = VirtualKeyShort.KEY_V;
+            ip.U.ki.dwFlags = KEYEVENTF.KEYUP;
+            SendInput(1, new[] { ip }, INPUT.Size);
+
+            // release CTRL key
+            ip.U.ki.wVk = VirtualKeyShort.CONTROL;
+            ip.U.ki.dwFlags = KEYEVENTF.KEYUP;
+            SendInput(1, new[] { ip }, INPUT.Size);
+        }
     }
 }

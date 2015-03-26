@@ -33,5 +33,22 @@ namespace DLab.Views
 //
 //            }
 //        }
+        private void ClipboardItems_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            SearchText.Focus();
+        }
+
+        private void SearchText_OnPreviewKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Up || e.Key == Key.Down)
+            {
+                ClipboardItems.Focus();
+                ClipboardItems.SelectedIndex = 0;
+
+                ClipboardItems.UpdateLayout();
+                var clipboardItem = (ListBoxItem)ClipboardItems.ItemContainerGenerator.ContainerFromItem(ClipboardItems.SelectedItem);
+                clipboardItem.Focus();
+            }
+        }
     }
 }

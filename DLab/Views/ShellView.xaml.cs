@@ -129,6 +129,8 @@ namespace DLab.Views
                 var clipboardItems = FindChild<ListBox>(view.Items, "ClipboardItems");
 
                 clipboardItems.Focus();
+
+                if (clipboardItems.Items.Count == 0) return;
                 clipboardItems.SelectedIndex = 0;
 
                 clipboardItems.UpdateLayout();

@@ -1,4 +1,5 @@
-﻿using Caliburn.Micro;
+﻿using System;
+using Caliburn.Micro;
 using DLab.Events;
 using StructureMap;
 
@@ -39,7 +40,7 @@ namespace DLab.ViewModels
             _windowManager = windowManager;
             _eventAggregator = eventAggregator;
             _viewModelFactory = viewModelFactory;
-            DisplayName = "DLab";
+            DisplayName = "Gadget";
             TabViewModel = _viewModelFactory.GetViewModel<TabViewModel>();
             _eventAggregator.Subscribe(this);
         }

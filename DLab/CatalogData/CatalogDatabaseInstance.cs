@@ -17,16 +17,20 @@ namespace DLab.CatalogData
 
         protected override List<ITableDefinition> RegisterTables()
         {
+            // The order of the following definitions is important.
+            // Always add new entities at bottom.
             return new List<ITableDefinition>
-                       {
-                           CreateTableDefinition<CatalogEntry, int>(x => x.Id)
-                                .WithIndex<CatalogEntry, string, int>(IdxFilename, x => x.Filename),
+            {
+                CreateTableDefinition<CatalogEntry, int>(x => x.Id)
+                    .WithIndex<CatalogEntry, string, int>(IdxFilename, x => x.Filename),
 
-                           CreateTableDefinition<FolderSpec, int>(x => x.Id),
+                CreateTableDefinition<FolderSpec, int>(x => x.Id),
 
-                           CreateTableDefinition<WebSpec, int>(x => x.Id)
-                                .WithIndex<WebSpec, string, int>(IdxWebCommand, x => x.Command)
-                       };
+                CreateTableDefinition<WebSpec, int>(x => x.Id)
+                    .WithIndex<WebSpec, string, int>(IdxWebCommand, x => x.Command),
+
+                CreateTableDefinition<ClipboardItem, int>(x => x.Id)
+            };
         }
     }
 

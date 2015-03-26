@@ -5,11 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:behaviours="clr-namespace:DLab.Behaviours"
              xmlns:cal="http://www.caliburnproject.org"
+             xmlns:converters="clr-namespace:DLab.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              behaviours:FocusBehavior.FocusFirst="true">
     <DockPanel>
         <DockPanel.Resources>
+            <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
+
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
 
             <DataTemplate x:Key="ClipboardItemTemplate">
@@ -28,17 +31,15 @@
             </Style>
         </DockPanel.Resources>
 
-		<StackPanel DockPanel.Dock="Bottom" behaviours:AccessKeyScoper.IsAccessKeyScope="True">
-			<TextBox Name="SearchText" Height="20" HorizontalAlignment="Stretch"></TextBox>
-			<Button Name="Search" Height="20" Content="Search" IsDefault="True" Template="{StaticResource BlankButton}"/>
-		</StackPanel>
+        <Label DockPanel.Dock="Bottom" Height="20" Visibility="{Binding HideStateMsg, Converter={StaticResource BoolToHiddenConverter}}">Loading</Label>
 
-		<StackPanel behaviours:AccessKeyScoper.IsAccessKeyScope="True">
-			<Button Name="Paste" DockPanel.Dock="Bottom" Height="20" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
-			<ListBox Name="ClipboardItems" 
-					 TabIndex="0" 
-					 ItemTemplate="{StaticResource ClipboardItemTemplate}" 
-					 AlternationCount="2"/>
-		</StackPanel>
+        <TextBox Name="SearchText" DockPanel.Dock="Bottom" Height="20" HorizontalAlignment="Stretch" PreviewKeyUp="SearchText_OnPreviewKeyUp"></TextBox>
+		<Button Name="Paste" DockPanel.Dock="Bottom" Height="20" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
+        
+		<ListBox Name="ClipboardItems" 
+					TabIndex="0" 
+					ItemTemplate="{StaticResource ClipboardItemTemplate}" 
+                    PreviewTextInput="ClipboardItems_OnPreviewTextInput"
+					AlternationCount="2"/>
     </DockPanel>
 </UserControl>

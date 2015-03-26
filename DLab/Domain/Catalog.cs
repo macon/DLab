@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DLab.CatalogData;
+using DLab.Infrastructure;
 using Wintellect.Sterling;
 
 namespace DLab.Domain
@@ -28,6 +29,12 @@ namespace DLab.Domain
         public List<WebSpec> WebSpecs()
         {
             return _catalogDatabaseInstance.Query<WebSpec, int>().Select(x => x.LazyValue.Value).ToList();
+        }
+
+        public List<ClipboardItem> ClipboardItems()
+        {
+            var res = _catalogDatabaseInstance.Query<ClipboardItem, int>();
+            return res.Select(x => x.LazyValue.Value).ToList();
         }
 
         public void Save<T>(T entity) where T : class, new()
@@ -67,7 +74,7 @@ namespace DLab.Domain
                 .Select(x => x.LazyValue.Value)
                 .OrderByDescending(x => x.Priority);
 
-            var r1 = webCommands.Select(x => new MatchResult(x) {CommandType = CommandType.Uri});
+            var r1 = webCommands.Select(x => new MatchResult(x) {CommandType = CommandType.Uri, Icon = DefaultSystemBrowser.IconImage});
             var r2 = r1.Concat(fileCommands.Select(x => new MatchResult(x) { CommandType = CommandType.File}));
 
             return r2.Take(pageSize).ToList();
@@ -87,5 +94,28 @@ namespace DLab.Domain
         {
             _catalogDatabaseInstance.Delete(entity);
         }
+
+        public void TrySaveClipboardItem(ClipboardItem instance)
+        {
+            var res = _catalogDatabaseInstance.Query<ClipboardItem, int>();
+            var currentCount = res.Count;
+            if (currentCount < MaxClipboardHistory)
+            {
+                instance.Id = currentCount + 1;
+                Save(instance);
+                return;
+            }
+
+            var candidates = _catalogDatabaseInstance.Query<ClipboardItem, int>()
+                .Where(x => x.LazyValue.Value.PasteCount <= instance.PasteCount && x.LazyValue.Value.Clipped < instance.Clipped)
+                .Select(x => x.LazyValue.Value);
+
+            var victim = candidates.OrderBy(x => x.PasteCount).ThenBy(x => x.Clipped).FirstOrDefault();
+            if (victim == null) return;
+            instance.Id = victim.Id;
+            Save(instance);
+        }
+
+        public const int MaxClipboardHistory = 3;
     }
 }

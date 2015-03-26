@@ -40,6 +40,9 @@
     <Reference Include="Caliburn.Micro.Platform">
       <HintPath>..\packages\Caliburn.Micro.2.0.1\lib\net45\Caliburn.Micro.Platform.dll</HintPath>
     </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Ookii.Dialogs.Wpf">
       <HintPath>..\packages\Ookii.Dialogs.1.0\lib\net35\Ookii.Dialogs.Wpf.dll</HintPath>
     </Reference>
@@ -85,8 +88,12 @@
     <Compile Include="Behaviours\AccessKeyScoper.cs" />
     <Compile Include="Behaviours\FocusBehaviour.cs" />
     <Compile Include="CatalogData\CatalogDatabaseInstance.cs" />
+    <Compile Include="Domain\ClipboardItem.cs" />
+    <Compile Include="Domain\CommandType.cs" />
+    <Compile Include="Domain\MatchResult.cs" />
     <Compile Include="Domain\WebSpec.cs" />
     <Compile Include="Events\SystemStatusChangeEvent.cs" />
+    <Compile Include="Infrastructure\DefaultSystemBrowser.cs" />
     <Compile Include="ViewModels\ClipboardItemViewModel.cs" />
     <Compile Include="ViewModels\FolderSpecViewModel.cs" />
     <Compile Include="Infrastructure\CustomHotkey.cs" />
@@ -202,6 +209,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Content Include="log4net.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

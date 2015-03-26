@@ -8,6 +8,7 @@ namespace DLab.Domain
         List<CatalogEntry> Files();
         List<FolderSpec> Folders();
         List<WebSpec> WebSpecs();
+        List<ClipboardItem> ClipboardItems();
         void Save<T>(T entity) where T : class, new();
         void SaveNoFlush<T>(T entity) where T : class, new();
         ISterlingDatabaseInstance Instance { get; }
@@ -16,5 +17,6 @@ namespace DLab.Domain
         List<MatchResult> GetMatches(string text, int pageSize = 5);
         void CreateDefaultFolders();
         void Remove<T>(T entity) where T : class;
+        void TrySaveClipboardItem(ClipboardItem instance);
     }
 }

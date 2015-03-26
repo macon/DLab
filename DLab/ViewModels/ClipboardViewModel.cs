@@ -1,10 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 using Caliburn.Micro;
+using DLab.Domain;
 using DLab.Infrastructure;
 using DLab.Views;
+using Action = System.Action;
 using Clipboard = System.Windows.Clipboard;
 using Screen = Caliburn.Micro.Screen;
 
@@ -13,23 +20,96 @@ namespace DLab.ViewModels
 	public class ClipboardViewModel : Screen, ITabViewModel, IHandle<ClipboardChangedEvent>
     {
         private readonly IEventAggregator _eventAggregator;
-        private ClipboardItemViewModel _selectedClipboardItemViewModel;
+	    private readonly ICatalog _catalog;
+	    private ClipboardItemViewModel _selectedClipboardItem;
         private static bool _isWritingToClipboard;
+	    private List<ClipboardItemViewModel> _masterList;
+	    private string _searchText = "";
+	    private bool _hideStateMsg;
+	    private Task _clipboardTidyTask;
+        private CancellationTokenSource _cancelClipboardTidyTask;
 
-        public ClipboardViewModel(IEventAggregator eventAggregator)
+	    public ClipboardViewModel(IEventAggregator eventAggregator, ICatalog catalog)
         {
             _eventAggregator = eventAggregator;
-            _eventAggregator.Subscribe(this);
+	        _catalog = catalog;
+	        _eventAggregator.Subscribe(this);
             DisplayName = "Clipboard";
 
             ClipboardItems = new BindableCollection<ClipboardItemViewModel>();
-            if (Clipboard.ContainsText())
+
+            _masterList = new List<ClipboardItemViewModel>();
+
+	        HideStateMsg = false;
+        }
+
+        private async Task ClipboardTidyAsync(TimeSpan interval, CancellationToken token)
+        {
+            if (interval > TimeSpan.Zero)
+                await Task.Delay(interval, token);
+
+            while (!token.IsCancellationRequested)
             {
-                ClipboardItems.Add(new ClipboardItemViewModel(Clipboard.GetText()));
+                Debug.WriteLine("Tidying {0}", DateTime.Now);
+                foreach (var clipboardItemViewModel in _masterList.Where(x => !x.IsSaved && x.PasteCount > 2))
+                {
+                    Debug.WriteLine("Persisting clipboard item:{0}", new object[] {clipboardItemViewModel.DisplayText});
+//                    _catalog.Save(clipboardItemViewModel.Instance);
+                    _catalog.TrySaveClipboardItem(clipboardItemViewModel.Instance);
+                }
+
+                if (interval > TimeSpan.Zero)
+                    await Task.Delay(interval, token);
             }
         }
 
-        public BindableCollection<ClipboardItemViewModel> ClipboardItems { get; set; }
+	    public bool HideStateMsg
+	    {
+	        get { return _hideStateMsg; }
+	        set
+	        {
+	            _hideStateMsg = value;
+                NotifyOfPropertyChange();
+	        }
+	    }
+
+	    protected override void OnDeactivate(bool close)
+	    {
+	        base.OnDeactivate(close);
+            _cancelClipboardTidyTask.Cancel();
+	    }
+
+	    protected async override void OnViewAttached(object view, object context)
+	    {
+	        base.OnViewAttached(view, context);
+            var clipboardItems = await LoadClipboardItemsAsync();
+            _masterList.Clear();
+            _masterList.AddRange(clipboardItems);
+
+            SafeAddToClipboardHistory(Clipboard.GetText());
+            RebuildClipboardItems();
+
+            HideStateMsg = true;
+
+            //            Application.Current.Dispatcher.BeginInvoke(
+            //                (Action) async delegate
+            //                {
+            //                    _cancelClipboardTidyTask = new CancellationTokenSource();
+            //                    _clipboardTidyTask = ClipboardTidyAsync(TimeSpan.FromSeconds(10), _cancelClipboardTidyTask.Token);
+            //           	        await _clipboardTidyTask;
+            //                }, DispatcherPriority.Render, null);
+            _cancelClipboardTidyTask = new CancellationTokenSource();
+            _clipboardTidyTask = ClipboardTidyAsync(TimeSpan.FromSeconds(10), _cancelClipboardTidyTask.Token);
+            //           	        await _clipboardTidyTask;
+	    }
+
+	    private async Task<List<ClipboardItemViewModel>> LoadClipboardItemsAsync()
+	    {
+//	        await Task.Delay(5000);
+	        return await Task.Run(() => _catalog.ClipboardItems().Select(x => new ClipboardItemViewModel(x)).ToList());
+	    }
+
+	    public BindableCollection<ClipboardItemViewModel> ClipboardItems { get; set; }
 
         public int Order
         {
@@ -40,17 +120,23 @@ namespace DLab.ViewModels
         {
             if (!Clipboard.ContainsText()) return;
 
-	        var clipboardText = Clipboard.GetText();
-	        if (ClipboardItems.Any(x => x.Text.Equals(clipboardText, StringComparison.InvariantCultureIgnoreCase)))
-	        {
-		        BringItemToTop(clipboardText);
-				return;
-	        }
+            SafeAddToClipboardHistory(Clipboard.GetText());
 
-            Debug.WriteLine("Writing to clipboard from thread {0}", Thread.CurrentThread.ManagedThreadId);
-            ClipboardItems.Insert(0, new ClipboardItemViewModel(Clipboard.GetText()));
-            SelectedClipboardItemViewModel = ClipboardItems.First();
+            RebuildClipboardItems();
+            SelectedClipboardItem = ClipboardItems.First();
         }
+
+	    private void SafeAddToClipboardHistory(string text)
+	    {
+            if (string.IsNullOrEmpty(text)) return;
+
+            if (_masterList.Any(x => x.Text.Equals(text, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                BringItemToTop(text);
+                return;
+            }
+            _masterList.Insert(0, new ClipboardItemViewModel(text));
+	    }
 
 	    public void SetClipboardBlind(string text)
         {
@@ -61,71 +147,74 @@ namespace DLab.ViewModels
             Clipboard.SetText(text);
         }
 
-		public void Search(string searchText)
-		{
-			
-		}
+	    public string SearchText
+	    {
+	        get { return _searchText; }
+	        set
+	        {
+                if (_searchText.Equals(value, StringComparison.InvariantCultureIgnoreCase)) return;
+	            _searchText = value;
+	            if (string.IsNullOrEmpty(_searchText))
+	            {
+                    RebuildClipboardItems();
+                    return;
+	            }
+	            var matchedItems = _masterList.Where(x => x.Text.IndexOf(_searchText, StringComparison.InvariantCultureIgnoreCase) >= 0);
+                RebuildClipboardItems(matchedItems);
+	        }
+	    }
 
-        public void Paste()
+	    public void Paste()
         {
-            Debug.WriteLine("clipboard text: {0}", new object[] {SelectedClipboardItemViewModel});
-            SetClipboardBlind(SelectedClipboardItemViewModel.Text);
+            Debug.WriteLine("clipboard text: {0}", new object[] {SelectedClipboardItem});
+            SetClipboardBlind(SelectedClipboardItem.Text);
+	        SelectedClipboardItem.PasteCount++;
+	        ReportPasteCounts();
 
             var title = Win32.GetWindowTitle(ShellView.ClientHwnd);
             Debug.WriteLine("target window title: {0}", new object[] { title });
 
-            SendPasteToClient();
-			BringItemToTop(SelectedClipboardItemViewModel.Text);
+            Win32.SendPasteToClient(ShellView.ClientHwnd);
+			BringItemToTop(SelectedClipboardItem.Text);
             _eventAggregator.Publish(new UserActionEvent(), Execute.OnUIThread);
         }
 
-	    private void BringItemToTop(string clipboardText)
+	    private void ReportPasteCounts()
 	    {
-		    var matchedItem = ClipboardItems.FirstOrDefault(x => x.Text.Equals(clipboardText, StringComparison.InvariantCultureIgnoreCase));
-		    if (matchedItem == null) return;
-
-		    var oldIndex = ClipboardItems.IndexOf(matchedItem);
-		    if (oldIndex == 0) return;
-
-		    ClipboardItems.Move(oldIndex, 0);
+            Debug.WriteLine("Paste counts:");
+            foreach (var model in _masterList)
+	        {
+	            Debug.WriteLine("'{0}' --> {1}", new object[]{model.DisplayText, model.PasteCount});
+	        }
 	    }
 
-	    private static void SendPasteToClient()
+	    private void BringItemToTop(string clipboardText)
+	    {
+		    var matchedItem = _masterList.FirstOrDefault(x => x.Text.Equals(clipboardText, StringComparison.InvariantCultureIgnoreCase));
+		    if (matchedItem == null) return;
+
+		    var oldIndex = _masterList.IndexOf(matchedItem);
+		    if (oldIndex == 0) return;
+
+		    _masterList.RemoveAt(oldIndex);
+            _masterList.Insert(0, matchedItem);
+	        RebuildClipboardItems();
+	    }
+
+	    private void RebuildClipboardItems(IEnumerable<ClipboardItemViewModel> items = null)
+	    {
+	        ClipboardItems.Clear();
+            ClipboardItems.AddRange(items ?? _masterList);
+	        SelectedClipboardItem = ClipboardItems.First();
+	    }
+
+       
+        public ClipboardItemViewModel SelectedClipboardItem
         {
-            Win32.BringWindowToTop(ShellView.ClientHwnd);
-
-            var ip = new Win32.INPUT {type = Win32.INPUT_KEYBOARD};
-            ip.U.ki.wScan = 0;
-            ip.U.ki.time = 0;
-            ip.U.ki.dwExtraInfo = new UIntPtr(0);
-
-            // press CTRL key
-            ip.U.ki.wVk = Win32.VirtualKeyShort.CONTROL;
-            ip.U.ki.dwFlags = 0;
-            Win32.SendInput(1, new[] {ip}, Win32.INPUT.Size);
-
-            // press V key
-            ip.U.ki.wVk = Win32.VirtualKeyShort.KEY_V;
-            ip.U.ki.dwFlags = 0;
-            Win32.SendInput(1, new[] {ip}, Win32.INPUT.Size);
-
-            // release V key
-            ip.U.ki.wVk = Win32.VirtualKeyShort.KEY_V;
-            ip.U.ki.dwFlags = Win32.KEYEVENTF.KEYUP;
-            Win32.SendInput(1, new[] {ip}, Win32.INPUT.Size);
-
-            // release CTRL key
-            ip.U.ki.wVk = Win32.VirtualKeyShort.CONTROL;
-            ip.U.ki.dwFlags = Win32.KEYEVENTF.KEYUP;
-            Win32.SendInput(1, new[] {ip}, Win32.INPUT.Size);
-        }
-        
-        public ClipboardItemViewModel SelectedClipboardItemViewModel
-        {
-            get { return _selectedClipboardItemViewModel; }
+            get { return _selectedClipboardItem; }
             set
             {
-                _selectedClipboardItemViewModel = value;
+                _selectedClipboardItem = value;
                 NotifyOfPropertyChange();
             }
         }

@@ -26,10 +26,13 @@
                      PreviewTextInput="MatchedItems_OnPreviewTextInput">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel cal:View.Model="{Binding}">
-                            <TextBlock Text="{Binding Path=CommandModel.Command}" ></TextBlock>
-                            <TextBlock Text="{Binding Path=CommandModel.Target}" Margin="10 0 0 0" Foreground="CadetBlue"></TextBlock>
-                        </StackPanel>
+                        <DockPanel cal:View.Model="{Binding}">
+                            <Image Margin="2" DockPanel.Dock="Left" Source="{Binding Icon}"/>
+                            <StackPanel >
+                                <TextBlock Text="{Binding Path=CommandModel.Command}" ></TextBlock>
+                                <TextBlock Text="{Binding Path=CommandModel.Target}" Margin="10 0 0 0" Foreground="CadetBlue"></TextBlock>
+                            </StackPanel>
+                        </DockPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
