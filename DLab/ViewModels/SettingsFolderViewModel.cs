@@ -15,20 +15,22 @@ namespace DLab.ViewModels
     {
         private readonly ICatalog _catalog;
         private readonly IEventAggregator _eventAggregator;
+        private readonly FolderSpecRepo _folderSpecRepo;
         private bool _includeSubfolders;
         private FolderSpecViewModel _selectedFolder;
         private SystemState _systemState;
         private bool _isScanning;
-        private List<FolderSpec> MasterFolders { get; set; }
+//        private List<FolderSpec> MasterFolders { get; set; }
         public BindableCollection<string> ScannedItems { get; set; }
         public BindableCollection<FolderSpecViewModel> Folders { get; private set; }
         private List<CatalogEntry> CatalogFiles { get; set; }
 
-        public SettingsFolderViewModel(ICatalog catalog, IEventAggregator eventAggregator)
+        public SettingsFolderViewModel(ICatalog catalog, IEventAggregator eventAggregator, FolderSpecRepo folderSpecRepo)
         {
-            MasterFolders = new List<FolderSpec>();
+//            MasterFolders = new List<FolderSpec>();
             _catalog = catalog;
             _eventAggregator = eventAggregator;
+            _folderSpecRepo = folderSpecRepo;
             DisplayName = "Folders";
             ScannedItems = new BindableCollection<string>();
             Folders = new BindableCollection<FolderSpecViewModel>();
@@ -51,11 +53,12 @@ namespace DLab.ViewModels
         private void InitialiseFolders()
         {
             Folders.Clear();
-            MasterFolders.Clear();
+//            MasterFolders.Clear();
 
-            var r = _catalog.Folders();
-            MasterFolders.AddRange(r);
-            Folders.AddRange(MasterFolders.Select(x => new FolderSpecViewModel(x, _catalog)));
+//            var r = _catalog.Folders();
+            var r = _folderSpecRepo.Folders;
+//            MasterFolders.AddRange(r);
+            Folders.AddRange(r.Select(x => new FolderSpecViewModel(x, _catalog)));
             SelectedFolder = Folders.FirstOrDefault();
         }
 
@@ -72,12 +75,9 @@ namespace DLab.ViewModels
         public void RemoveFolder()
         {
             if (SelectedFolder == null) return;
-            var entity = MasterFolders.FirstOrDefault(x => x.Id == SelectedFolder.Id);
-            if (entity == null) return;
-
-            _catalog.Remove(entity);
-            _catalog.Flush();
-            InitialiseFolders();
+            _folderSpecRepo.Delete(SelectedFolder.Instance);
+            Folders.Remove(SelectedFolder);
+            SelectedFolder = Folders.FirstOrDefault();
         }
 
         public void AddFolder()
@@ -87,16 +87,16 @@ namespace DLab.ViewModels
             if (result.HasValue == false || result.Value == false || string.IsNullOrEmpty(s.SelectedPath)) return;
 
             var newFolderSpec = new FolderSpec(s.SelectedPath);
-            MasterFolders.Add(newFolderSpec);
+            _folderSpecRepo.Save(newFolderSpec);
             Folders.Add(new FolderSpecViewModel(newFolderSpec, _catalog));
 
-            _catalog.Save(newFolderSpec);
-            _catalog.Flush();
+//            _catalog.Save(newFolderSpec);
+//            _catalog.Flush();
         }
 
         public void DebugCatalog()
         {
-            foreach (var entry in CatalogFiles.OrderBy(x => x.Filename))
+            foreach (var entry in CatalogFiles.OrderBy(x => x.Command))
             {
                 Debug.WriteLine(entry);
             }
@@ -104,14 +104,15 @@ namespace DLab.ViewModels
 
         public Task<int> Scan()
         {
+            _folderSpecRepo.Flush();
             var settings = new DLabSettings();
-            settings.Folders.AddRange(MasterFolders);
+            settings.Folders.AddRange(_folderSpecRepo.Folders);
 
             var cb = new CatalogBuilder(settings);
             cb.Build();
             CatalogFiles = cb.Contents;
             ScannedItems.Clear();
-            ScannedItems.AddRange(cb.Contents.Select(c => c.Filename));
+            ScannedItems.AddRange(cb.Contents.Select(c => c.Command));
             return Task.FromResult(1);
         }
 

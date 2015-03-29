@@ -1,15 +1,23 @@
+using System.Collections.Generic;
 using System.IO;
+using ProtoBuf;
 
 namespace DLab.Domain
 {
+    [ProtoContract]
+    public class FileCommands
+    {
+        [ProtoMember(1)]
+        public List<CatalogEntry> Entries { get; set; }
+    }
+
+    [ProtoContract]
     public class CatalogEntry : EntityBase
     {
-        public int Id { get; set; }
+        [ProtoMember(1)]
         public string FolderPath { get; set; }
-        public string Filename { get; set; }
 
         public override string Target { get { return Fullname(); } }
-        public override string Command { get { return Filename; } }
 
         public CatalogEntry()
         {}
@@ -20,18 +28,18 @@ namespace DLab.Domain
         public CatalogEntry(string folderPath, string filename)
         {
             FolderPath = folderPath;
-            Filename = filename;
+            Command = filename;
             Id = Fullname().GetHashCode();
         }
 
         public string Fullname()
         {
-            return Path.Combine(FolderPath, Filename);
+            return Path.Combine(FolderPath, Command);
         }
 
         public override string ToString()
         {
-            return string.Format("{0}, p={1}, path={2}", Filename, Priority, FolderPath);
+            return string.Format("{0}, p={1}, path={2}", Command, Priority, FolderPath);
         }
     }
 }

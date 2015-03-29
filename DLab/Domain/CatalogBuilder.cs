@@ -33,12 +33,12 @@ namespace DLab.Domain
 
         private void CatalogMatchingFiles(FolderSpec folderSpec, Action<string> fileAction)
         {
-            foreach (var file in Directory.EnumerateFiles(folderSpec.FolderName, "*.*").Where(x => ExtensionMatch(x, folderSpec.Extensions)))
+            foreach (var file in System.IO.Directory.EnumerateFiles(folderSpec.FolderName, "*.*").Where(x => ExtensionMatch(x, folderSpec.Extensions)))
             {
                 fileAction(file);
             }
 
-            foreach (var subDir in Directory.GetDirectories(folderSpec.FolderName))
+            foreach (var subDir in FileCommands.GetDirectories(folderSpec.FolderName))
             {
                 try
                 {

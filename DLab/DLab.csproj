@@ -46,6 +46,9 @@
     <Reference Include="Ookii.Dialogs.Wpf">
       <HintPath>..\packages\Ookii.Dialogs.1.0\lib\net35\Ookii.Dialogs.Wpf.dll</HintPath>
     </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
+    </Reference>
     <Reference Include="StructureMap">
       <HintPath>..\packages\structuremap.3.1.4.143\lib\net40\StructureMap.dll</HintPath>
     </Reference>
@@ -90,6 +93,7 @@
     <Compile Include="CatalogData\CatalogDatabaseInstance.cs" />
     <Compile Include="Domain\ClipboardItem.cs" />
     <Compile Include="Domain\CommandType.cs" />
+    <Compile Include="Domain\FileCommandsRepo.cs" />
     <Compile Include="Domain\MatchResult.cs" />
     <Compile Include="Domain\WebSpec.cs" />
     <Compile Include="Events\SystemStatusChangeEvent.cs" />

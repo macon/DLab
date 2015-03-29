@@ -1,12 +1,176 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DLab.CatalogData;
 using DLab.Infrastructure;
+using ProtoBuf;
 using Wintellect.Sterling;
 
 namespace DLab.Domain
 {
+    public class FolderSpecRepo
+    {
+        private FolderDirectory _folderDirectory { get; set; }
+
+        public List<FolderSpec> Folders
+        {
+            get
+            {
+                if (_folderDirectory != null) return _folderDirectory.Folders;
+
+                using (var file = File.OpenRead("Folders.bin"))
+                {
+                    _folderDirectory = Serializer.Deserialize<FolderDirectory>(file);
+                }
+                return _folderDirectory.Folders;
+            }
+        }
+
+        public void Save(FolderSpec folderSpec)
+        {
+            var existingEntry = _folderDirectory.Folders.SingleOrDefault(x => x.Id == folderSpec.Id);
+            if (existingEntry != null)
+            {
+                _folderDirectory.Folders.Remove(existingEntry);
+            }
+            _folderDirectory.Folders.Add(folderSpec);
+        }
+
+        public void Flush()
+        {
+            using (var file = File.Create("Folders.bin"))
+            {
+                Serializer.Serialize(file, _folderDirectory);
+            }
+        }
+
+        public void Delete(FolderSpec folderSpec)
+        {
+            var existingSpec = _folderDirectory.Folders.SingleOrDefault(x => x.Id == folderSpec.Id);
+            if (existingSpec == null) return;
+            _folderDirectory.Folders.Remove(existingSpec);
+        }
+    }
+
+    public class WebSpecRepo
+    {
+        private WebSpecs _webSpecs { get; set; }
+
+        public List<WebSpec> Specs
+        {
+            get
+            {
+                if (_webSpecs != null) return _webSpecs.Specs;
+
+                using (var file = File.OpenRead("WebSpecs.bin"))
+                {
+                    _webSpecs = Serializer.Deserialize<WebSpecs>(file);
+                }
+                return _webSpecs.Specs;
+            }
+        }
+
+        public void Save(WebSpec webSpec)
+        {
+            var existingSpec = _webSpecs.Specs.SingleOrDefault(x => x.Id == webSpec.Id);
+            if (existingSpec != null)
+            {
+                _webSpecs.Specs.Remove(existingSpec);
+            }
+            _webSpecs.Specs.Add(webSpec);
+        }
+
+        public void Flush()
+        {
+            using (var file = File.Create("WebSpecs.bin"))
+            {
+                Serializer.Serialize(file, _webSpecs);
+            }
+        }
+    }
+
+
+
+    public class ProtoCat
+    {
+        private WebSpecs _webSpecs { get; set; }
+        private FolderDirectory _folderDirectory { get; set; }
+
+
+        public List<FolderSpec> Folders {
+            get
+            {
+                if (_folderDirectory != null) return _folderDirectory.Folders;
+                using (var file = File.OpenRead("FolderDirectory.bin"))
+                {
+                    _folderDirectory = Serializer.Deserialize<FolderDirectory>(file);
+                }
+                return _folderDirectory.Folders;
+            }
+        }
+
+        public List<WebSpec> WebSpecs()
+        {
+            if (_webSpecs != null) return _webSpecs.Specs;
+            using (var file = File.OpenRead("WebSpecs.bin"))
+            {
+                _webSpecs = Serializer.Deserialize<WebSpecs>(file);
+            }
+            return _webSpecs.Specs;
+        }
+
+        public List<ClipboardItem> ClipboardItems()
+        {
+            return new List<ClipboardItem>();
+        }
+
+        public void Save<T>(T entity) where T : class, new()
+        {
+            
+        }
+
+        public void SaveNoFlush<T>(T entity) where T : class, new()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISterlingDatabaseInstance Instance
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear<T>() where T : class, new()
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<MatchResult> GetMatches(string text, int pageSize = 5)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CreateDefaultFolders()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Remove<T>(T entity) where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TrySaveClipboardItem(ClipboardItem instance)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class Catalog : ICatalog
     {
         private readonly ISterlingDatabaseInstance _catalogDatabaseInstance;

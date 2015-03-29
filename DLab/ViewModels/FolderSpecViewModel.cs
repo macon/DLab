@@ -7,53 +7,52 @@ namespace DLab.ViewModels
 {
     public class FolderSpecViewModel : Screen
     {
-        private readonly FolderSpec _innerFolderSpec;
         private readonly ICatalog _catalog;
 
-        public FolderSpec Instance { get { return _innerFolderSpec; } }
+        public FolderSpec Instance { get; private set; }
 
-        public FolderSpecViewModel(FolderSpec innerFolderSpec, ICatalog catalog)
+        public FolderSpecViewModel(FolderSpec folderSpec, ICatalog catalog)
         {
-            if (innerFolderSpec == null) throw new ArgumentNullException("innerFolderSpec");
-            _innerFolderSpec = innerFolderSpec;
+            if (folderSpec == null) throw new ArgumentNullException("folderSpec");
+            Instance = folderSpec;
             _catalog = catalog;
         }
 
         public bool Subdirectory
         {
-            get { return _innerFolderSpec.Subdirectory; }
+            get { return Instance.Subdirectory; }
             set
             {
-                if (_innerFolderSpec.Subdirectory == value) return;
-                _innerFolderSpec.Subdirectory = value;
-                _catalog.Save(_innerFolderSpec);
+                if (Instance.Subdirectory == value) return;
+                Instance.Subdirectory = value;
+                _catalog.Save(Instance);
                 NotifyOfPropertyChange();
             }
         }
 
         public string Extensions
         {
-            get { return _innerFolderSpec.SearchPattern; }
+            get { return Instance.SearchPattern; }
             set
             {
-                if (_innerFolderSpec.SearchPattern == value) return;
+                if (Instance.SearchPattern == value) return;
 
-                _innerFolderSpec.SetExtensions(value);
-                _catalog.Save(_innerFolderSpec);
+                Instance.SetExtensions(value);
+                _catalog.Save(Instance);
                 NotifyOfPropertyChange();
             }
         }
 
         public string FolderName
         {
-            get { return _innerFolderSpec.FolderName; }
-            set { _innerFolderSpec.FolderName = value; }
+            get { return Instance.FolderName; }
+            set { Instance.FolderName = value; }
         }
 
         public int Id
         {
-            get { return _innerFolderSpec.Id; }
-            set { _innerFolderSpec.Id = value; }
+            get { return Instance.Id; }
+            set { Instance.Id = value; }
         }
     }
 }

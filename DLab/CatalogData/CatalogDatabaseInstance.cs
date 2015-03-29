@@ -22,7 +22,7 @@ namespace DLab.CatalogData
             return new List<ITableDefinition>
             {
                 CreateTableDefinition<CatalogEntry, int>(x => x.Id)
-                    .WithIndex<CatalogEntry, string, int>(IdxFilename, x => x.Filename),
+                    .WithIndex<CatalogEntry, string, int>(IdxFilename, x => x.Command),
 
                 CreateTableDefinition<FolderSpec, int>(x => x.Id),
 
