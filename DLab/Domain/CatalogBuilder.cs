@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DLab.Domain
 {
@@ -16,10 +18,12 @@ namespace DLab.Domain
             Contents = new List<CatalogEntry>();
         }
 
-        public void Build()
+        public int Build(CancellationToken token)
         {
+            Contents = new List<CatalogEntry>();
             foreach (var folder in _settings.Folders)
             {
+                token.ThrowIfCancellationRequested();
                 var folder1 = folder;
 
                 CatalogMatchingFiles(folder1, 
@@ -27,19 +31,22 @@ namespace DLab.Domain
                         var fi = new FileInfo(filename);
                         var entry = new CatalogEntry(fi);
                         Contents.Add(entry);
-                    });
+                    }, token);
             }
+            return Contents.Count;
         }
 
-        private void CatalogMatchingFiles(FolderSpec folderSpec, Action<string> fileAction)
+        private void CatalogMatchingFiles(FolderSpec folderSpec, Action<string> fileAction, CancellationToken token)
         {
-            foreach (var file in System.IO.Directory.EnumerateFiles(folderSpec.FolderName, "*.*").Where(x => ExtensionMatch(x, folderSpec.Extensions)))
+            foreach (var file in Directory.EnumerateFiles(folderSpec.FolderName, "*.*").Where(x => ExtensionMatch(x, folderSpec.ExtensionList)))
             {
+                token.ThrowIfCancellationRequested();
                 fileAction(file);
             }
 
-            foreach (var subDir in FileCommands.GetDirectories(folderSpec.FolderName))
+            foreach (var subDir in Directory.GetDirectories(folderSpec.FolderName))
             {
+                token.ThrowIfCancellationRequested();
                 try
                 {
                     var subFolderSpec = new FolderSpec()
@@ -49,7 +56,7 @@ namespace DLab.Domain
                         Subdirectory = folderSpec.Subdirectory
                     };
 
-                    CatalogMatchingFiles(subFolderSpec, fileAction);
+                    CatalogMatchingFiles(subFolderSpec, fileAction, token);
                 }
                 catch (UnauthorizedAccessException)
                 {

@@ -40,6 +40,15 @@
 					TabIndex="0" 
 					ItemTemplate="{StaticResource ClipboardItemTemplate}" 
                     PreviewTextInput="ClipboardItems_OnPreviewTextInput"
-					AlternationCount="2"/>
+					AlternationCount="2">
+<!--            <ListBox.ItemContainerStyle>-->
+<!--                <Style TargetType="ListBoxItem">-->
+<!--                    <Setter Property="Height" Value="25" />-->
+<!--                    <Setter Property="VerticalContentAlignment" Value="Center"></Setter>-->
+<!--                    <Setter Property="Margin" Value="1"></Setter>-->
+<!--                    <Setter Property="Padding" Value="1"></Setter>-->
+<!--                </Style>-->
+<!--            </ListBox.ItemContainerStyle>-->
+        </ListBox>
     </DockPanel>
 </UserControl>

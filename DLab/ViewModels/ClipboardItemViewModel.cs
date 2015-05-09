@@ -1,5 +1,7 @@
 using System;
 using DLab.Domain;
+using log4net;
+using log4net.Core;
 
 namespace DLab.ViewModels
 {
@@ -53,10 +55,19 @@ namespace DLab.ViewModels
 			get
 			{
 				var parts = Text.Split(new[]{'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
-
-				return parts.Length > 1 
-					? string.Format("{0}\n{1}{2}", ParseLine(parts[0]), ParseLine(parts[1]), parts.Length>2 ? "..." : "") 
-					: ParseLine(parts[0]);
+			    try
+			    {
+			        return parts.Length > 1 
+			            ? string.Format("{0}\n{1}{2}", ParseLine(parts[0]), ParseLine(parts[1]), parts.Length>2 ? "..." : "") 
+			            : ParseLine(parts[0]);
+			    }
+                catch (IndexOutOfRangeException e)
+                {
+                    var _logger = LogManager.GetLogger("Default");
+                    _logger.ErrorFormat(Text);
+                    _logger.Error(e);
+                    return Text.Substring(0, 100);
+                }
 			}
 		}
 

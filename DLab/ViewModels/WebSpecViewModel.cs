@@ -23,6 +23,17 @@ namespace DLab.ViewModels
             set { _webSpec.Id = value; }
         }
 
+        public string Arguments
+        {
+            get { return _webSpec.Arguments; }
+            set
+            {
+                if (!string.IsNullOrEmpty(_webSpec.Arguments) && _webSpec.Arguments.Equals(value, StringComparison.InvariantCultureIgnoreCase)) return;
+                _webSpec.Arguments = value;
+                IsDirty = true;
+            }
+        }
+
         public string Command
         {
             get { return _webSpec.Command; }

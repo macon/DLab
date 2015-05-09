@@ -9,6 +9,11 @@ namespace DLab.Domain
     {
         [ProtoMember(1)]
         public List<WebSpec> Specs { get; set; }
+
+        public WebSpecs()
+        {
+            Specs = new List<WebSpec>();
+        }
     }
 
     [ProtoContract]
@@ -40,17 +45,18 @@ namespace DLab.Domain
         }
     }
 
-    public interface ISetPriority
+    public interface IWeightedCommand
     {
         int Priority { get; set; }
         string Command { get; }
+        string Arguments { get; }
         string Target { get; set; }
     }
 
     [ProtoContract]
     [ProtoInclude(100, typeof(CatalogEntry))]
     [ProtoInclude(101, typeof(WebSpec))]
-    public class EntityBase : ISetPriority
+    public class EntityBase : IWeightedCommand
     {
         public EntityBase()
         {
@@ -65,5 +71,7 @@ namespace DLab.Domain
         public virtual string Command { get; set; }
         [ProtoMember(4)]
         public virtual string Target { get; set; }
+        [ProtoMember(5)]
+        public string Arguments { get; set; }
     }
 }

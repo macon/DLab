@@ -10,27 +10,6 @@
         <DockPanel.Resources>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </DockPanel.Resources>
-        
-        <WrapPanel DockPanel.Dock="Bottom">
-            <Button Name="Save" Content="Save" Width="80" Height="25" Margin="0 0 5 0"/>
-            <Button Name="ScanIt" Content="ScanIt" Width="80" Height="25" Margin="0 0 5 0"/>
-<!--            <Label Content="Scanning" Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"/>-->
-<!--            <Image gif:ImageBehavior.AnimatedSource="pack://application:,,,/Dlab;component/Resources/Doom_monster.gif" Width="42" Height="59" Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"/>-->
-        </WrapPanel>
-
-        <Border DockPanel.Dock="Bottom" Margin="3 3 3 3" BorderThickness="1">
-            <DockPanel>
-                <WrapPanel DockPanel.Dock="Left" VerticalAlignment="Center">
-                    <CheckBox Name="SelectedFolder_Subdirectory"/>
-                    <Label>Subfolder?</Label>
-                </WrapPanel>
-
-                <WrapPanel VerticalAlignment="Center" DockPanel.Dock="Left">
-                    <Label>Extensions:</Label>
-                    <TextBox Text="{Binding SelectedFolder.Extensions, UpdateSourceTrigger=LostFocus}" MaxLines="10" Width="150"></TextBox>
-                </WrapPanel>
-            </DockPanel>
-        </Border>
 
         <DockPanel DockPanel.Dock="Top">
             <Button Name="AddSpecialFolder" DockPanel.Dock="Right" Width="25" Height="25" Content="S" ToolTip="Special folder" Margin="0 0 2 0"/>
@@ -38,6 +17,30 @@
             <Button Name="AddFolder" DockPanel.Dock="Right" Width="25" Height="25" Content="+" ToolTip="Add folder" Margin="0 0 2 0"/>
             <Label HorizontalAlignment="Left">Folders:</Label>
         </DockPanel>
+
+        <WrapPanel DockPanel.Dock="Bottom">
+            <Button Name="SaveAsync" Content="Save" Width="80" Height="25" Margin="0 0 5 0"/>
+            <Button Name="Cancel" Content="Cancel" Width="80" Height="25" Margin="0 0 5 0"></Button>
+<!--            <Button Name="ScanIt" Content="ScanIt" Width="80" Height="25" Margin="0 0 5 0"/>-->
+            <Label Name="FileCount"/>
+<!--            <Label Content="Scanning" Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"/>-->
+<!--            <Image gif:ImageBehavior.AnimatedSource="pack://application:,,,/Dlab;component/Resources/Doom_monster.gif" Width="42" Height="59" Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}"/>-->
+        </WrapPanel>
+
+        <Border DockPanel.Dock="Bottom" Margin="3 3 3 3" BorderThickness="1">
+            <ContentControl Name="SelectedFolder"></ContentControl>
+<!--            <DockPanel>-->
+<!--                <WrapPanel DockPanel.Dock="Left" VerticalAlignment="Center">-->
+<!--                    <CheckBox Name="SelectedFolder_Subdirectory"/>-->
+<!--                    <Label>Subfolder?</Label>-->
+<!--                </WrapPanel>-->
+<!---->
+<!--                <WrapPanel VerticalAlignment="Center" DockPanel.Dock="Left">-->
+<!--                    <Label>Extensions:</Label>-->
+<!--                    <TextBox Text="{Binding SelectedFolder.Extensions, UpdateSourceTrigger=LostFocus}" MaxLines="10" Width="150"></TextBox>-->
+<!--                </WrapPanel>-->
+<!--            </DockPanel>-->
+        </Border>
 
         <ListBox Name="Folders" DisplayMemberPath="FolderName" DockPanel.Dock="Left" HorizontalAlignment="Stretch"/>
 

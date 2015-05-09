@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,6 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using DLab.Infrastructure;
 using DLab.ViewModels;
+using log4net;
 using Action = System.Action;
 using ListBox = System.Windows.Controls.ListBox;
 using TextBox = System.Windows.Controls.TextBox;
@@ -25,19 +27,24 @@ namespace DLab.Views
         private HotKeyHost _hotKeyHost;
         private HotKey _showCommandHotKey;
         private CustomHotKey _showClipboardHotKey;
+        private CustomHotKey _showSettingsHotKey;
         private HwndSource _hWndSource;
         private ShellViewModel _vm;
         public static IntPtr ClientHwnd;
+        private ILog _logger;
 
         /// <summary>
         /// Occurs when the user clicks Exit from the tray icon context menu
         /// </summary>
         private bool _userRequestedExit;
 
+
         public ShellView()
         {
             InitializeComponent();
             InitializeApp();
+            _logger = LogManager.GetLogger("Default");
+            ActiveClipboardString = "";
         }
 
         private void InitializeApp()
@@ -47,6 +54,7 @@ namespace DLab.Views
 //            _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToCommand);
             _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Alt, true, SetFocusToCommand);
             _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Alt, true, SetFocusToClipboard);
+            _showSettingsHotKey = new CustomHotKey("_showSettingsHotKey", Key.S, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToSettings);
         }
 
         void Current_Deactivated(object sender, EventArgs e)
@@ -67,6 +75,11 @@ namespace DLab.Views
         private void OnOpenClipboardClick(object sender, RoutedEventArgs e)
         {
             SetFocusToClipboard();
+        }
+
+        private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
+        {
+            SetFocusToSettings();
         }
 
         private void OnExitClick(object sender, RoutedEventArgs e)
@@ -106,6 +119,7 @@ namespace DLab.Views
             _hotKeyHost = new HotKeyHost(window);
             _hotKeyHost.AddHotKey(_showCommandHotKey);
             _hotKeyHost.AddHotKey(_showClipboardHotKey);
+//            _hotKeyHost.AddHotKey(_showSettingsHotKey);
         }
 
         private void SetFocusToCommand()
@@ -137,6 +151,13 @@ namespace DLab.Views
                 var clipboardItem = (ListBoxItem) clipboardItems.ItemContainerGenerator.ContainerFromItem(clipboardItems.SelectedItem);
                 clipboardItem.Focus();
             });
+        }
+
+        private void SetFocusToSettings()
+        {
+            ClientHwnd = GetPreviousWindow();
+
+            _vm.Settings();
         }
 
         private void SetFocus(int tabIndex, Action focusCommand)
@@ -247,7 +268,7 @@ namespace DLab.Views
 
             switch (msg)
             {
-                case  WM_CLIPBOARDUPDATE:
+                case WM_CLIPBOARDUPDATE:
 //                    if (!ShouldCapture) return IntPtr.Zero;
                     DrawContent();
                     break;
@@ -258,10 +279,46 @@ namespace DLab.Views
 
         private void DrawContent()
         {
+
             if (Clipboard.ContainsText())
             {
-                var s = Clipboard.GetText();
-                if (s.Equals(ActiveClipboardString, StringComparison.InvariantCultureIgnoreCase)) return;
+                IDataObject clipData = null;
+                var s = "";
+                try
+                {
+                    s = Clipboard.GetText();
+                    clipData = Clipboard.GetDataObject();
+                }
+                catch (COMException e)
+                {
+                    _logger.Error(e);
+                    return;
+                }
+
+                if (clipData == null) return;
+
+                var clipboardText = "";
+                try
+                {
+                    if (clipData.GetDataPresent(DataFormats.Text))
+                    {
+                        clipboardText = (string) clipData.GetData(DataFormats.Text, false);
+                    }
+                    else
+                    {
+                        _logger.InfoFormat("data in clipboard not in right format");
+                    }
+                    _logger.InfoFormat("read from clipboard: {0}", clipboardText);
+                    _logger.InfoFormat("alt read from clipboard: {0}", s);
+                }
+                catch (COMException e)
+                {
+                    _logger.Error("Caught exception from clipData.GetData");
+                    _logger.Error(e);
+                    return;
+                }
+
+                if (clipboardText.Equals(ActiveClipboardString, StringComparison.InvariantCultureIgnoreCase)) return;
 
                 // we have some text in the clipboard.
                 if (_vm != null)
@@ -298,7 +355,6 @@ namespace DLab.Views
         }
     }
 
-
     public class CloseThisWindowCommand : ICommand
     {
         #region ICommand Members
@@ -314,7 +370,7 @@ namespace DLab.Views
         {
             if (CanExecute(parameter))
             {
-                Win.Application.Current.MainWindow.Visibility = Visibility.Hidden;
+                Application.Current.MainWindow.Visibility = Visibility.Hidden;
             }
         }
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using ProtoBuf;
-using Wintellect.Sterling.Serialization;
 
 namespace DLab.Domain
 {
@@ -11,49 +10,48 @@ namespace DLab.Domain
     {
         [ProtoMember(1)]
         public List<FolderSpec> Folders { get; set; }
+
+        public FolderDirectory()
+        {
+            Folders = new List<FolderSpec>();
+        }
     }
 
     [ProtoContract]
     public class FolderSpec
     {
-        [SterlingIgnore]
-        public List<string> DefaultExtensions { get; set; }
-
         public FolderSpec()
         {
-            DefaultExtensions = new List<string> { ".lnk", ".exe", ".bat", ".cmd" };
-            Extensions = DefaultExtensions;
         }
 
-        public FolderSpec(string folder) : this()
+        public FolderSpec(string folder)
         {
             FolderName = folder;
             Id = FolderName.GetHashCode();
+            Extensions = ".exe;.lnk;.bat;.cmd";
         }
 
         [ProtoMember(1)]
         public int Id { get; set; }
+
         [ProtoMember(2)]
         public string FolderName { get; set; }
+
         [ProtoMember(3)]
-        public List<string> Extensions { get; set; }
+        public string Extensions { get; set; }
+
         [ProtoMember(4)]
         public bool Subdirectory { get; set; }
 
-        [SterlingIgnore]
-        public string SearchPattern
+        public List<string> ExtensionList
         {
-            get { return Extensions.Aggregate((s1, s2) => Combine(s1, ";", s2)); }
-        }
-
-        public void SetExtensions(string extensions)
-        {
-            if (string.IsNullOrEmpty(extensions)) return;
-            var parts = extensions.Split(new[]{';'}, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0) return;
-
-            Extensions.Clear();
-            Extensions.AddRange(parts);
+            get
+            {
+                if (string.IsNullOrEmpty(Extensions)) return new List<string>();
+                var parts = Extensions.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                
+                return (parts.Length == 0) ? new List<string>() : parts.ToList();
+            }
         }
 
         private string Combine(string s1, string separator, string s2)

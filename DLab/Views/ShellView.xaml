@@ -5,10 +5,23 @@
         xmlns:infrastructure="clr-namespace:DLab.Infrastructure"
         xmlns:converters="clr-namespace:DLab.Converters"
         Title="ShellView"
-        Height="300" Width="600" ShowInTaskbar="False" WindowStyle="ToolWindow" >
+        Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"
+        Height="300" Width="600" ShowInTaskbar="False"  >
     
     <Window.Resources>
         <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
+
+<!--        <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">-->
+<!--            <Setter Property="Template">-->
+<!--                <Setter.Value>-->
+<!--                    <ControlTemplate TargetType="Button">-->
+<!--                        <Border Background="Transparent">-->
+<!--                            <ContentPresenter/>-->
+<!--                        </Border>-->
+<!--                    </ControlTemplate>-->
+<!--                </Setter.Value>-->
+<!--            </Setter>-->
+<!--        </Style>-->
     </Window.Resources>
 
     <Window.Visibility>
@@ -27,7 +40,7 @@
         <infrastructure:NotifyIcon
 			x:Name="notifyIcon"
 			Text="Gadget"
-			Icon="pack://application:,,,/Dlab;component/Resources/ancore-26.png"
+			Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"
 			BalloonTipText="Gadget"
 			BalloonTipTitle="Gadget"
 			BalloonTipIcon="Info"
@@ -36,15 +49,18 @@
                 <ContextMenu>
                     <MenuItem Header="Command" Click="OnOpenClick" InputGestureText="Alt+Space" />
                     <MenuItem Header="Clipboard" Click="OnOpenClipboardClick" InputGestureText="Ctrl+Alt+C" />
+                    <MenuItem Header="Settings" Click="OnOpenSettingsClick" />
                     <MenuItem Header="Exit" Click="OnExitClick" />
                 </ContextMenu>
             </infrastructure:NotifyIcon.ContextMenu>
         </infrastructure:NotifyIcon>
         
-        <WrapPanel DockPanel.Dock="Bottom">
+        <DockPanel DockPanel.Dock="Bottom">
+            <Button Name="Settings" DockPanel.Dock="Right" Style="{StaticResource TransparentStyle}">
+                <Image Source="pack://application:,,,/Dlab;component/Resources/settings2-26.png" Height="26" Width="26" Margin="3 3"></Image>
+            </Button>
             <Label Name="SystemStatus" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"></Label>
-            <Button Name="Settings" Content="Settings" Width="80" Height="25" HorizontalAlignment="Right" />
-        </WrapPanel>
+        </DockPanel>
         
         <ContentControl Name="TabViewModel"/>
     </DockPanel>

@@ -9,6 +9,11 @@ namespace DLab.Domain
     {
         [ProtoMember(1)]
         public List<CatalogEntry> Entries { get; set; }
+
+        public FileCommands()
+        {
+            Entries = new List<CatalogEntry>();
+        }
     }
 
     [ProtoContract]

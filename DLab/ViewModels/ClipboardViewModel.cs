@@ -6,33 +6,33 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using Caliburn.Micro;
 using DLab.Domain;
 using DLab.Infrastructure;
 using DLab.Views;
-using Action = System.Action;
-using Clipboard = System.Windows.Clipboard;
-using Screen = Caliburn.Micro.Screen;
+using log4net;
+using ILog = log4net.ILog;
+using LogManager = log4net.LogManager;
 
 namespace DLab.ViewModels
 {
 	public class ClipboardViewModel : Screen, ITabViewModel, IHandle<ClipboardChangedEvent>
     {
         private readonly IEventAggregator _eventAggregator;
-	    private readonly ICatalog _catalog;
+	    private readonly ClipboardRepo _clipboardRepo;
 	    private ClipboardItemViewModel _selectedClipboardItem;
-        private static bool _isWritingToClipboard;
 	    private List<ClipboardItemViewModel> _masterList;
 	    private string _searchText = "";
 	    private bool _hideStateMsg;
-	    private Task _clipboardTidyTask;
         private CancellationTokenSource _cancelClipboardTidyTask;
+	    private ILog _logger;
+	    private bool _isInitialised;
 
-	    public ClipboardViewModel(IEventAggregator eventAggregator, ICatalog catalog)
+	    public ClipboardViewModel(IEventAggregator eventAggregator, ClipboardRepo clipboardRepo)
         {
+            _logger = LogManager.GetLogger("Default");
             _eventAggregator = eventAggregator;
-	        _catalog = catalog;
+	        _clipboardRepo = clipboardRepo;
 	        _eventAggregator.Subscribe(this);
             DisplayName = "Clipboard";
 
@@ -45,21 +45,18 @@ namespace DLab.ViewModels
 
         private async Task ClipboardTidyAsync(TimeSpan interval, CancellationToken token)
         {
-            if (interval > TimeSpan.Zero)
-                await Task.Delay(interval, token);
-
             while (!token.IsCancellationRequested)
             {
-                Debug.WriteLine("Tidying {0}", DateTime.Now);
-                foreach (var clipboardItemViewModel in _masterList.Where(x => !x.IsSaved && x.PasteCount > 2))
-                {
-                    Debug.WriteLine("Persisting clipboard item:{0}", new object[] {clipboardItemViewModel.DisplayText});
-//                    _catalog.Save(clipboardItemViewModel.Instance);
-                    _catalog.TrySaveClipboardItem(clipboardItemViewModel.Instance);
-                }
-
                 if (interval > TimeSpan.Zero)
                     await Task.Delay(interval, token);
+
+                _logger.InfoFormat("Tidying {0}", DateTime.Now);
+                foreach (var clipboardItemViewModel in _masterList.Where(x => !x.IsSaved && x.PasteCount > 2))
+                {
+                    _logger.InfoFormat("Persisting clipboard item:{0}", new object[] {clipboardItemViewModel.DisplayText.Substring(0,100)});
+                    _clipboardRepo.TrySaveClipboardItem(clipboardItemViewModel.Instance);
+                    _clipboardRepo.Flush();
+                }
             }
         }
 
@@ -82,6 +79,8 @@ namespace DLab.ViewModels
 	    protected async override void OnViewAttached(object view, object context)
 	    {
 	        base.OnViewAttached(view, context);
+            if (_isInitialised) return;
+
             var clipboardItems = await LoadClipboardItemsAsync();
             _masterList.Clear();
             _masterList.AddRange(clipboardItems);
@@ -91,22 +90,17 @@ namespace DLab.ViewModels
 
             HideStateMsg = true;
 
-            //            Application.Current.Dispatcher.BeginInvoke(
-            //                (Action) async delegate
-            //                {
-            //                    _cancelClipboardTidyTask = new CancellationTokenSource();
-            //                    _clipboardTidyTask = ClipboardTidyAsync(TimeSpan.FromSeconds(10), _cancelClipboardTidyTask.Token);
-            //           	        await _clipboardTidyTask;
-            //                }, DispatcherPriority.Render, null);
             _cancelClipboardTidyTask = new CancellationTokenSource();
-            _clipboardTidyTask = ClipboardTidyAsync(TimeSpan.FromSeconds(10), _cancelClipboardTidyTask.Token);
-            //           	        await _clipboardTidyTask;
+	        Task.Run(() => 
+                ClipboardTidyAsync(TimeSpan.FromMinutes(30), _cancelClipboardTidyTask.Token), 
+                _cancelClipboardTidyTask.Token);
+
+	        _isInitialised = true;
 	    }
 
 	    private async Task<List<ClipboardItemViewModel>> LoadClipboardItemsAsync()
 	    {
-//	        await Task.Delay(5000);
-	        return await Task.Run(() => _catalog.ClipboardItems().Select(x => new ClipboardItemViewModel(x)).ToList());
+	        return await Task.Run(() => _clipboardRepo.Items.Select(x => new ClipboardItemViewModel(x)).ToList());
 	    }
 
 	    public BindableCollection<ClipboardItemViewModel> ClipboardItems { get; set; }
@@ -118,13 +112,57 @@ namespace DLab.ViewModels
 
         public void Handle(ClipboardChangedEvent message)
         {
-            if (!Clipboard.ContainsText()) return;
+            if (!Clipboard.ContainsText())
+            {
+                _logger.Info("Could not read from CB 2");
+                return;
+            }
 
-            SafeAddToClipboardHistory(Clipboard.GetText());
+            var clipboardText = SafeReadClipboardText();
+            if (string.IsNullOrEmpty(clipboardText)) return;
+
+            SafeAddToClipboardHistory(clipboardText);
 
             RebuildClipboardItems();
             SelectedClipboardItem = ClipboardItems.First();
         }
+
+        public string SafeReadClipboardText()
+        {
+            IDataObject clipData;
+
+            try
+            {
+                clipData = Clipboard.GetDataObject();
+            }
+            catch (COMException e)
+            {
+                _logger.WarnFormat("Caught following exception from Clipboard.GetDataObject...");
+                _logger.Error(e);
+                return null;
+            }
+
+            if (clipData == null || !clipData.GetDataPresent(DataFormats.Text))
+            {
+                _logger.Info("Could not read from CB");
+                return null;
+            }
+
+            string clipboardText;
+            try
+            {
+                clipboardText = (string)clipData.GetData(DataFormats.Text, false);
+                _logger.InfoFormat("read from clipboard: {0}", clipboardText);
+            }
+            catch (COMException e)
+            {
+                _logger.Error("Caught exception from clipData.GetData");
+                _logger.Error(e);
+                return null;
+            }
+            return clipboardText;
+        }
+
 
 	    private void SafeAddToClipboardHistory(string text)
 	    {

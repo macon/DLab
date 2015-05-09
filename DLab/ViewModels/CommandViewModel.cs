@@ -1,32 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using Caliburn.Micro;
 using DLab.Domain;
+using DLab.Infrastructure;
+using ILog = log4net.ILog;
 
 namespace DLab.ViewModels
 {
     public class CommandViewModel : Screen, ITabViewModel
     {
-        private readonly ICatalog _catalog;
         private readonly IEventAggregator _eventAggregator;
+        private readonly CommandResolver _commandResolver;
         private string _title;
         private BindableCollection<MatchResult> _matchedItems;
         private string _userCommand;
         private MatchResult _selectedMatch;
+        private ILog _log;
 
-        public CommandViewModel(ICatalog catalog, IEventAggregator eventAggregator)
+        public CommandViewModel(IAppServices appServices, CommandResolver commandResolver)
         {
-            _catalog = catalog;
-            _eventAggregator = eventAggregator;
+            _eventAggregator = appServices.EventAggregator;
+            _log = appServices.Log;
+            _commandResolver = commandResolver;
             _eventAggregator.Subscribe(this);
             _matchedItems = new BindableCollection<MatchResult>();
             DisplayName = "Command";
@@ -60,7 +64,7 @@ namespace DLab.ViewModels
 
                 if (!string.IsNullOrEmpty(_userCommand))
                 {
-                    r = _catalog.GetMatches(_userCommand);
+                    r = _commandResolver.GetMatches(_userCommand);
                 }
                 MatchedItems.Clear();
                 if (!r.Any()) return;
@@ -92,13 +96,13 @@ namespace DLab.ViewModels
             public ImageSource ImageSource { get; set; }
         }
 
-        private static ImageClass GetIcon(MatchResult matchedItem)
+        private ImageClass GetIcon(MatchResult matchedItem)
         {
             var result = new ImageClass {Item = matchedItem};
-            var icon = Icon.ExtractAssociatedIcon(matchedItem.CommandModel.Target);
+            var icon = SafeExtractAssociatedIcon(matchedItem);
             if (icon == null) return null;
 
-            result.ImageSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
+            result.ImageSource = Imaging.CreateBitmapSourceFromHIcon(
                         icon.Handle,
                         new Int32Rect(0,0,icon.Width, icon.Height),
                         BitmapSizeOptions.FromEmptyOptions());
@@ -107,6 +111,24 @@ namespace DLab.ViewModels
                 result.ImageSource.Freeze();
             }
             return result;
+        }
+
+        private Icon SafeExtractAssociatedIcon(MatchResult matchedItem)
+        {
+            Icon icon = null;
+            try
+            {
+                icon = Icon.ExtractAssociatedIcon(matchedItem.CommandModel.Target);
+            }
+            catch (AccessViolationException e)
+            {
+                _log.Error(e);
+            }
+            catch (FileNotFoundException e)
+            {
+                _log.Error(e);
+            }
+            return icon;
         }
 
         public MatchResult SelectedMatchedItem
@@ -131,21 +153,55 @@ namespace DLab.ViewModels
         {
             if (SelectedMatchedItem == null) return;
 
-            (SelectedMatchedItem.CommandModel as ISetPriority).Priority++;
+            (SelectedMatchedItem.CommandModel as IWeightedCommand).Priority++;
 
             if (SelectedMatchedItem.CommandModel is WebSpec)
             {
-                _catalog.Save(SelectedMatchedItem.CommandModel as WebSpec);
+                _commandResolver.Save(SelectedMatchedItem.CommandModel as WebSpec);
             }
             else
             {
-                _catalog.Save(SelectedMatchedItem.CommandModel as CatalogEntry);
+                _commandResolver.Save(SelectedMatchedItem.CommandModel as CatalogEntry);
             }
-            _catalog.Flush();
+            _commandResolver.Flush();
 
-            Process.Start(SelectedMatchedItem.CommandModel.Target);
+            if (!ValidCommand(SelectedMatchedItem.CommandModel)) return;
+
+            var psi = ParseCommandModel(SelectedMatchedItem.CommandModel);
+            Process.Start(psi);
 
             _eventAggregator.Publish(new UserActionEvent(), Execute.BeginOnUIThread);
+        }
+
+        private bool ValidCommand(EntityBase commandModel)
+        {
+            var fileSpec = commandModel as CatalogEntry;
+            if (fileSpec == null) return true;
+            if (File.Exists(fileSpec.Target)) return true;
+
+            MessageBox.Show(string.Format("File not found:\n{0}\n\n(consider re-scanning)", fileSpec.Target), "Warning");
+            return false;
+        }
+
+        private ProcessStartInfo ParseCommandModel(EntityBase target)
+        {
+            var psi = new ProcessStartInfo();
+
+            if (Clipboard.ContainsText() && target.Target.Contains("{0}"))
+            {
+                psi.FileName = string.Format(target.Target, Clipboard.GetText());
+            }
+            else
+            {
+                psi.FileName = target.Target;
+            }
+
+            if (!string.IsNullOrEmpty(target.Arguments))
+            {
+                psi.Arguments = target.Arguments;
+            }
+
+            return psi;
         }
     }
 }

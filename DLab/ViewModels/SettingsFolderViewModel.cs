@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Caliburn.Micro;
 using DLab.Domain;
@@ -13,31 +13,24 @@ namespace DLab.ViewModels
 {
     public class SettingsFolderViewModel : Screen, ISettingsViewModel
     {
-        private readonly ICatalog _catalog;
         private readonly IEventAggregator _eventAggregator;
         private readonly FolderSpecRepo _folderSpecRepo;
-        private bool _includeSubfolders;
+        private readonly FileCommandsRepo _fileCommandsRepo;
         private FolderSpecViewModel _selectedFolder;
-        private SystemState _systemState;
         private bool _isScanning;
-//        private List<FolderSpec> MasterFolders { get; set; }
-        public BindableCollection<string> ScannedItems { get; set; }
         public BindableCollection<FolderSpecViewModel> Folders { get; private set; }
         private List<CatalogEntry> CatalogFiles { get; set; }
 
-        public SettingsFolderViewModel(ICatalog catalog, IEventAggregator eventAggregator, FolderSpecRepo folderSpecRepo)
+        public SettingsFolderViewModel(IEventAggregator eventAggregator, FolderSpecRepo folderSpecRepo, FileCommandsRepo fileCommandsRepo)
         {
-//            MasterFolders = new List<FolderSpec>();
-            _catalog = catalog;
             _eventAggregator = eventAggregator;
             _folderSpecRepo = folderSpecRepo;
+            _fileCommandsRepo = fileCommandsRepo;
             DisplayName = "Folders";
-            ScannedItems = new BindableCollection<string>();
             Folders = new BindableCollection<FolderSpecViewModel>();
 
             InitialiseFolders();
-
-            CatalogFiles = _catalog.Files();
+            CatalogFiles = _fileCommandsRepo.Files;
         }
 
         public FolderSpecViewModel SelectedFolder
@@ -53,23 +46,19 @@ namespace DLab.ViewModels
         private void InitialiseFolders()
         {
             Folders.Clear();
-//            MasterFolders.Clear();
-
-//            var r = _catalog.Folders();
             var r = _folderSpecRepo.Folders;
-//            MasterFolders.AddRange(r);
-            Folders.AddRange(r.Select(x => new FolderSpecViewModel(x, _catalog)));
+            Folders.AddRange(r.Select(x => new FolderSpecViewModel(x, _folderSpecRepo)));
             SelectedFolder = Folders.FirstOrDefault();
         }
 
         public void Clear()
         {
-            _catalog.Clear<CatalogEntry>();
+            _fileCommandsRepo.Clear();
+            _fileCommandsRepo.Flush();
         }
 
         public void AddSpecialFolder()
         {
-
         }
 
         public void RemoveFolder()
@@ -88,10 +77,9 @@ namespace DLab.ViewModels
 
             var newFolderSpec = new FolderSpec(s.SelectedPath);
             _folderSpecRepo.Save(newFolderSpec);
-            Folders.Add(new FolderSpecViewModel(newFolderSpec, _catalog));
-
-//            _catalog.Save(newFolderSpec);
-//            _catalog.Flush();
+            var newVm = new FolderSpecViewModel(newFolderSpec, _folderSpecRepo);
+            Folders.Add(newVm);
+            SelectedFolder = newVm;
         }
 
         public void DebugCatalog()
@@ -102,36 +90,52 @@ namespace DLab.ViewModels
             }
         }
 
-        public Task<int> Scan()
+        public async Task<int> ScanAsync(CancellationToken token)
         {
             _folderSpecRepo.Flush();
             var settings = new DLabSettings();
             settings.Folders.AddRange(_folderSpecRepo.Folders);
+            int result;
 
             var cb = new CatalogBuilder(settings);
-            cb.Build();
-            CatalogFiles = cb.Contents;
-            ScannedItems.Clear();
-            ScannedItems.AddRange(cb.Contents.Select(c => c.Command));
-            return Task.FromResult(1);
-        }
-
-        public bool CanSave()
-        {
-            return _systemState == SystemState.Idle;
-        }
-
-        private Task<int> ScanAndSave()
-        {
-            return new Task<int>(() =>
+            try
             {
-//                UpdateFolders();
+                result = await Task.Run(() => cb.Build(_scanCancelToken.Token), token);
+            }
+            finally
+            {
+                CatalogFiles = cb.Contents;
+            }
+            return result;
+        }
 
-                Scan();
+        public bool CanSaveAsync
+        {
+            get { return !IsScanning; }
+        }
 
-                SaveAsync();
-                return 1;
-            });
+        public bool CanCancel
+        {
+            get { return IsScanning; }
+        }
+
+        public void Cancel()
+        {
+            _scanCancelToken.Cancel();
+        }
+
+        private async Task<bool> ScanAndSave(CancellationTokenSource cts)
+        {
+            try
+            {
+                await ScanAsync(cts.Token);
+                Save();
+            }
+            catch (TaskCanceledException)
+            {
+                return false;
+            }
+            return true;
         }
 
         public bool IsScanning
@@ -141,6 +145,8 @@ namespace DLab.ViewModels
             {
                 _isScanning = value;
                 NotifyOfPropertyChange();
+                NotifyOfPropertyChange(() => CanCancel);
+                NotifyOfPropertyChange(() => CanSaveAsync);
             }
         }
 
@@ -151,49 +157,35 @@ namespace DLab.ViewModels
             _eventAggregator.Publish(new SystemStatusChangeEvent(SystemState.Idle), Execute.BeginOnUIThread);
         }
 
-        public async void Save()
+        private CancellationTokenSource _scanCancelToken;
+        public async void SaveAsync()
         {
+            _scanCancelToken = new CancellationTokenSource();
             try
             {
-                _systemState = SystemState.Saving;
-                var t = ScanAndSave();
-                t.Start();
-                await t;
+                IsScanning = true;
+                await ScanAndSave(_scanCancelToken);
             }
             finally
             {
-                _systemState = SystemState.Idle;
+                IsScanning = false;
+                NotifyOfPropertyChange(() => FileCount);
             }
         }
 
-        private Task<int> SaveAsync()
+        public string FileCount
         {
-            if (CatalogFiles.Count == 0) return Task.FromResult(1);
-
-            _catalog.Clear<CatalogEntry>();
-
-            foreach (var entry in CatalogFiles)
-            {
-                _catalog.Save(entry);
-            }
-            _catalog.Flush();
-            return Task.FromResult(1);
+            get { return string.Format("File commands: {0}", _fileCommandsRepo.Files.Count); }
         }
 
-//        private void UpdateFolders()
-//        {
-//            var needFlush = false;
-//            foreach (var folder in Folders.Where(x => x.IsDirty))
-//            {
-//                _catalog.SaveNoFlush(folder.Instance);
-//                needFlush = true;
-//            }
-//            if (needFlush) _catalog.Flush();
-//        }
+        private bool Save()
+        {
+            if (CatalogFiles.Count == 0) return false;
 
-//        public bool IsDirty
-//        {
-//            get { return Folders.Any(x => x.IsDirty); }
-//        }
+            _fileCommandsRepo.ReplaceAll(CatalogFiles);
+            _fileCommandsRepo.Flush();
+            _folderSpecRepo.Flush();
+            return true;
+        }
     }
 }

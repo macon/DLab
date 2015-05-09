@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
 using Caliburn.Micro;
-using DLab.CatalogData;
 using DLab.Domain;
 using DLab.ViewModels;
 using log4net.Config;
 using StructureMap;
 using StructureMap.Graph;
-using Wintellect.Sterling;
-using Wintellect.Sterling.Server.FileSystem;
+using ILog = log4net.ILog;
 using LogManager = log4net.LogManager;
 
 namespace DLab
@@ -20,40 +19,36 @@ namespace DLab
     public class CaliburnMicroBootstrapper : BootstrapperBase
     {
         private IContainer _container;
-        private SterlingEngine _engine;
-        private ISterlingDatabaseInstance _catalogDb;
 
         public CaliburnMicroBootstrapper()
         {
             StartRuntime();
         }
 
-        protected override void OnExit(object sender, EventArgs e)
-        {
-            base.OnExit(sender, e);
-            _engine.Dispose();
-            _catalogDb = null;
-        }
-
         protected override void OnStartup(object sender, StartupEventArgs e)
         {
             base.OnStartup(sender, e);
 
-            InitialiseStorage();
+            var fi = new FileInfo("log4net.config");
+            XmlConfigurator.Configure(fi);
 
             _container = new Container(x =>
             {
                 x.For<IWindowManager>().Use<WindowManager>();
                 x.For<IEventAggregator>().Singleton().Use<EventAggregator>();
-                x.For<ISterlingDatabaseInstance>().Singleton().Use(_catalogDb);
                 x.For<IViewModelFactory>().Use<ViewModelFactory>();
                 x.For<SettingsViewModel>().Use<SettingsViewModel>();
-                x.For<ICatalog>().Singleton().Use<Catalog>();
                 x.For<CommandViewModel>().Use<CommandViewModel>();
                 x.For<TabViewModel>().Use<TabViewModel>();
                 x.For<ClipboardViewModel>().Use<ClipboardViewModel>();
                 x.For<SettingsFolderViewModel>().Use<SettingsFolderViewModel>();
                 x.For<SettingsWebViewModel>().Use<SettingsWebViewModel>();
+
+                x.For<FileCommandsRepo>().Use<FileCommandsRepo>().Singleton();
+                x.For<FolderSpecRepo>().Use<FolderSpecRepo>().Singleton();
+                x.For<WebSpecRepo>().Use<WebSpecRepo>().Singleton();
+                x.For<CommandResolver>().Use<CommandResolver>().Singleton();
+                x.For<ILog>().Use(ctx => LogManager.GetLogger("DLab"));
 
                 x.Scan(s =>
                 {
@@ -72,19 +67,12 @@ namespace DLab
 
         private void EnsureDefaultScanFolders()
         {
-            var catalog = _container.GetInstance<ICatalog>();
+            var repo = _container.GetInstance<FolderSpecRepo>();
 
-            if (!catalog.Folders().Any())
+            if (!repo.Folders.Any())
             {
-                catalog.CreateDefaultFolders();
+                repo.CreateDefaultFolders();
             }
-        }
-
-        private void InitialiseStorage()
-        {
-            _engine = new SterlingEngine();
-            _engine.Activate();
-            _catalogDb = _engine.SterlingDatabase.RegisterDatabase<CatalogDatabaseInstance>(new FileSystemDriver());
         }
 
         protected override object GetInstance(Type serviceType, string key)
@@ -112,7 +100,7 @@ namespace DLab
         protected override void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             base.OnUnhandledException(sender, e);
-            var logger = LogManager.GetLogger(GetType());
+            var logger = LogManager.GetLogger("DLab");
             logger.Error(e.Exception);
         }
     }

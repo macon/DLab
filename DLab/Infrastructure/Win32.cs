@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows;
+using log4net;
 
 namespace DLab.Infrastructure
 {

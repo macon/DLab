@@ -14,12 +14,25 @@ namespace DLab.Domain
             get
             {
                 if (FileCommands != null) return FileCommands.Entries;
+
+                if (!File.Exists("FileCommands.bin"))
+                {
+                    FileCommands = new FileCommands();
+                    return FileCommands.Entries;
+                }
+
                 using (var file = File.OpenRead("FileCommands.bin"))
                 {
                     FileCommands = Serializer.Deserialize<FileCommands>(file);
                 }
                 return FileCommands.Entries;
             }
+        }
+
+        public void ReplaceAll(List<CatalogEntry> files)
+        {
+            FileCommands.Entries.Clear();
+            FileCommands.Entries.AddRange(files);
         }
 
         public void Save(CatalogEntry catalogEntry)
@@ -38,6 +51,11 @@ namespace DLab.Domain
             {
                 Serializer.Serialize(file, FileCommands);
             }
+        }
+
+        public void Clear()
+        {
+            Files.Clear();
         }
     }
 }

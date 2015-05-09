@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +33,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\robot-48.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Caliburn.Micro">
@@ -58,6 +62,22 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Caliburn.Micro.2.0.1\lib\net45\System.Windows.Interactivity.dll</HintPath>
@@ -73,12 +93,6 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Wintellect.Sterling.Server">
-      <HintPath>..\packages\Sterling.1.6.2\lib\net40\Wintellect.Sterling.Server.dll</HintPath>
-    </Reference>
-    <Reference Include="Wintellect.Sterling.Server.FileSystem">
-      <HintPath>..\packages\Sterling.1.6.2\lib\net40\Wintellect.Sterling.Server.FileSystem.dll</HintPath>
-    </Reference>
     <Reference Include="WpfAnimatedGif">
       <HintPath>..\packages\WpfAnimatedGif.1.4.12\lib\net\WpfAnimatedGif.dll</HintPath>
     </Reference>
@@ -89,22 +103,27 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Behaviours\AccessKeyScoper.cs" />
+    <Compile Include="Behaviours\Attached.cs" />
     <Compile Include="Behaviours\FocusBehaviour.cs" />
-    <Compile Include="CatalogData\CatalogDatabaseInstance.cs" />
     <Compile Include="Domain\ClipboardItem.cs" />
+    <Compile Include="Domain\ClipboardRepo.cs" />
+    <Compile Include="Domain\CommandResolver.cs" />
     <Compile Include="Domain\CommandType.cs" />
     <Compile Include="Domain\FileCommandsRepo.cs" />
+    <Compile Include="Domain\FolderSpecRepo.cs" />
     <Compile Include="Domain\MatchResult.cs" />
     <Compile Include="Domain\WebSpec.cs" />
+    <Compile Include="Domain\WebSpecRepo.cs" />
     <Compile Include="Events\SystemStatusChangeEvent.cs" />
+    <Compile Include="HyperJump\Scanner.cs" />
     <Compile Include="Infrastructure\DefaultSystemBrowser.cs" />
+    <Compile Include="Infrastructure\IAppServices.cs" />
     <Compile Include="ViewModels\ClipboardItemViewModel.cs" />
     <Compile Include="ViewModels\FolderSpecViewModel.cs" />
     <Compile Include="Infrastructure\CustomHotkey.cs" />
     <Compile Include="Infrastructure\HotKey.cs" />
     <Compile Include="Domain\CatalogEntry.cs" />
     <Compile Include="Domain\CatalogBuilder.cs" />
-    <Compile Include="Domain\Catalog.cs" />
     <Compile Include="Infrastructure\NotifyIcon.cs" />
     <Compile Include="Infrastructure\NotifyIcon.Interop.cs" />
     <Compile Include="Infrastructure\Win32.cs" />
@@ -112,9 +131,13 @@
     <Compile Include="ViewModels\CommandViewModel.cs" />
     <Compile Include="Domain\FolderSpec.cs" />
     <Compile Include="Domain\DLabSettings.cs" />
-    <Compile Include="Domain\ICatalog.cs" />
     <Compile Include="ViewModels\FolderViewModel.cs" />
+    <Compile Include="ViewModels\HyperJumpFolderViewModel.cs" />
+    <Compile Include="ViewModels\HyperspaceViewModel.cs" />
     <Compile Include="ViewModels\ISettingsViewModel.cs" />
+    <Compile Include="Domain\Note.cs" />
+    <Compile Include="ViewModels\NotesViewModel.cs" />
+    <Compile Include="ViewModels\NoteViewModel.cs" />
     <Compile Include="ViewModels\SettingsFolderViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\SettingsWebViewModel.cs" />
@@ -130,8 +153,20 @@
     <Compile Include="Views\CommandView.xaml.cs">
       <DependentUpon>CommandView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\FolderSpecView.xaml.cs">
+      <DependentUpon>FolderSpecView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\FolderView.xaml.cs">
       <DependentUpon>FolderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\HyperspaceView.xaml.cs">
+      <DependentUpon>HyperspaceView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\NotesView.xaml.cs">
+      <DependentUpon>NotesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\NoteView.xaml.cs">
+      <DependentUpon>NoteView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SettingsFolderView.xaml.cs">
       <DependentUpon>SettingsFolderView.xaml</DependentUpon>
@@ -170,7 +205,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\FolderSpecView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\FolderView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\HyperspaceView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\NotesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\NoteView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -209,12 +260,21 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Resource Include="Resources\delete-26.png" />
+    <Resource Include="Resources\plus2_math-26.png" />
+    <Resource Include="Resources\settings2-26.png" />
+    <Resource Include="Resources\settings2-32.png" />
+    <Resource Include="Resources\settings2-48.png" />
+    <Resource Include="Resources\robot-48.ico" />
+    <Resource Include="Resources\robot-26.ico" />
+    <Resource Include="Resources\robot-26.png" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <Content Include="log4net.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

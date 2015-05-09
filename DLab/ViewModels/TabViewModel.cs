@@ -20,5 +20,10 @@ namespace DLab.ViewModels
         {
             get { return Items.Single(x => x is ClipboardViewModel) as ClipboardViewModel; }
         }
+
+        public NotesViewModel NotesViewModel
+        {
+            get { return Items.Single(x => x is NotesViewModel) as NotesViewModel; }
+        }
     }
 }
