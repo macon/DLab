@@ -6,8 +6,9 @@ namespace DLab.ViewModels
     public class SettingsViewModel : Conductor<ISettingsViewModel>.Collection.OneActive
     {
         private readonly IViewModelFactory _viewModelFactory;
-        private SettingsWebViewModel _settingsWebViewModel { get; set; }
-        private SettingsFolderViewModel _settingsFolderViewModel { get; set; }
+        private readonly SettingsDirViewModel _settingsDirViewModel;
+        private readonly SettingsWebViewModel _settingsWebViewModel;
+        private readonly SettingsFolderViewModel _settingsFolderViewModel;
 
         public SettingsViewModel(IViewModelFactory viewModelFactory)
         {
@@ -15,11 +16,12 @@ namespace DLab.ViewModels
             _viewModelFactory = viewModelFactory;
             _settingsFolderViewModel = _viewModelFactory.GetViewModel<SettingsFolderViewModel>();
             _settingsWebViewModel = _viewModelFactory.GetViewModel<SettingsWebViewModel>();
+            _settingsDirViewModel = _viewModelFactory.GetViewModel<SettingsDirViewModel>();
         }
 
         protected override void OnActivate()
         {
-            Items.AddRange(new ISettingsViewModel[] { _settingsFolderViewModel, _settingsWebViewModel });
+            Items.AddRange(new ISettingsViewModel[] { _settingsFolderViewModel, _settingsWebViewModel, _settingsDirViewModel });
 
             base.OnActivate();
         }

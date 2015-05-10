@@ -28,6 +28,7 @@ namespace DLab.Views
         private HotKey _showCommandHotKey;
         private CustomHotKey _showClipboardHotKey;
         private CustomHotKey _showSettingsHotKey;
+        private CustomHotKey _showDirHotKey;
         private HwndSource _hWndSource;
         private ShellViewModel _vm;
         public static IntPtr ClientHwnd;
@@ -37,6 +38,7 @@ namespace DLab.Views
         /// Occurs when the user clicks Exit from the tray icon context menu
         /// </summary>
         private bool _userRequestedExit;
+
 
 
         public ShellView()
@@ -55,6 +57,7 @@ namespace DLab.Views
             _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Alt, true, SetFocusToCommand);
             _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Alt, true, SetFocusToClipboard);
             _showSettingsHotKey = new CustomHotKey("_showSettingsHotKey", Key.S, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToSettings);
+            _showDirHotKey = new CustomHotKey("_showDirHotKey", Key.D, ModifierKeys.Alt, true, SetFocusToDir);
         }
 
         void Current_Deactivated(object sender, EventArgs e)
@@ -75,6 +78,11 @@ namespace DLab.Views
         private void OnOpenClipboardClick(object sender, RoutedEventArgs e)
         {
             SetFocusToClipboard();
+        }
+
+        private void OnOpenDirClick(object sender, RoutedEventArgs e)
+        {
+            SetFocusToDir();
         }
 
         private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
@@ -101,6 +109,8 @@ namespace DLab.Views
             Application.Current.Deactivated -= Current_Deactivated;
             _hotKeyHost.RemoveHotKey(_showCommandHotKey);
             _hotKeyHost.RemoveHotKey(_showClipboardHotKey);
+//            _hotKeyHost.RemoveHotKey(_showSettingsHotKey);
+            _hotKeyHost.RemoveHotKey(_showDirHotKey);
             Win32.RemoveClipboardFormatListener(_hWndSource.Handle);
             _hWndSource.RemoveHook(WndProc);
             notifyIcon.Visibility = Visibility.Hidden;
@@ -119,6 +129,7 @@ namespace DLab.Views
             _hotKeyHost = new HotKeyHost(window);
             _hotKeyHost.AddHotKey(_showCommandHotKey);
             _hotKeyHost.AddHotKey(_showClipboardHotKey);
+            _hotKeyHost.AddHotKey(_showDirHotKey);
 //            _hotKeyHost.AddHotKey(_showSettingsHotKey);
         }
 
@@ -158,6 +169,17 @@ namespace DLab.Views
             ClientHwnd = GetPreviousWindow();
 
             _vm.Settings();
+        }
+
+        private void SetFocusToDir()
+        {
+            SetFocus(3, () =>
+            {
+                var view = TabViewModel.Content as TabView;
+                var child = FindChild<TextBox>(view.Items, "UserCommand");
+                child.Text = "";
+                child.Focus();
+            });
         }
 
         private void SetFocus(int tabIndex, Action focusCommand)

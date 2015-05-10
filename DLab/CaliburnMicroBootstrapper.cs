@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,7 @@ using StructureMap;
 using StructureMap.Graph;
 using ILog = log4net.ILog;
 using LogManager = log4net.LogManager;
+using Console = DLab.Domain.Console;
 
 namespace DLab
 {
@@ -43,7 +45,7 @@ namespace DLab
                 x.For<ClipboardViewModel>().Use<ClipboardViewModel>();
                 x.For<SettingsFolderViewModel>().Use<SettingsFolderViewModel>();
                 x.For<SettingsWebViewModel>().Use<SettingsWebViewModel>();
-
+                x.For<SettingsDirViewModel>().Use<SettingsDirViewModel>();
                 x.For<FileCommandsRepo>().Use<FileCommandsRepo>().Singleton();
                 x.For<FolderSpecRepo>().Use<FolderSpecRepo>().Singleton();
                 x.For<WebSpecRepo>().Use<WebSpecRepo>().Singleton();
@@ -54,6 +56,7 @@ namespace DLab
                 {
                     s.TheCallingAssembly();
                     s.WithDefaultConventions();
+                    s.SingleImplementationsOfInterface();
                     s.RegisterConcreteTypesAgainstTheFirstInterface();
                     s.AddAllTypesOf<ITabViewModel>();
                 });
@@ -63,6 +66,8 @@ namespace DLab
 
             EnsureDefaultScanFolders();
             DisplayRootViewFor<ShellViewModel>();
+
+            Debug.WriteLine(_container.WhatDoIHave());
         }
 
         private void EnsureDefaultScanFolders()

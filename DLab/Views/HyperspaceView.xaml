@@ -13,7 +13,7 @@
 
         <TextBox Name="UserCommand" Width="999" PreviewKeyUp="UserCommand_OnPreviewKeyUp" HorizontalAlignment="Left" Text="{Binding UserCommand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" DockPanel.Dock="Top"></TextBox>
 
-        <ListBox Name="MatchedItems" PreviewTextInput="MatchedItems_OnPreviewTextInput" ItemsSource="{Binding Items}" DisplayMemberPath="FullPath" >
+        <ListBox Name="MatchedItems" PreviewKeyUp="MatchedItems_OnPreviewKeyUp" PreviewTextInput="MatchedItems_OnPreviewTextInput" ItemsSource="{Binding Items}" DisplayMemberPath="FullPath" >
             <!--            <ListBox.ItemTemplate>-->
             <!--                <DataTemplate>-->
             <!--~1~                    <TextBlock poc:Attached.FormattedText="{Binding DisplayText}" />@1@-->

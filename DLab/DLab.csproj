@@ -109,6 +109,8 @@
     <Compile Include="Domain\ClipboardRepo.cs" />
     <Compile Include="Domain\CommandResolver.cs" />
     <Compile Include="Domain\CommandType.cs" />
+    <Compile Include="Domain\Console.cs" />
+    <Compile Include="Domain\EntityBase.cs" />
     <Compile Include="Domain\FileCommandsRepo.cs" />
     <Compile Include="Domain\FolderSpecRepo.cs" />
     <Compile Include="Domain\MatchResult.cs" />
@@ -138,6 +140,7 @@
     <Compile Include="Domain\Note.cs" />
     <Compile Include="ViewModels\NotesViewModel.cs" />
     <Compile Include="ViewModels\NoteViewModel.cs" />
+    <Compile Include="ViewModels\SettingsDirViewModel.cs" />
     <Compile Include="ViewModels\SettingsFolderViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\SettingsWebViewModel.cs" />
@@ -153,6 +156,9 @@
     <Compile Include="Views\CommandView.xaml.cs">
       <DependentUpon>CommandView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\ConsoleView.xaml.cs">
+      <DependentUpon>ConsoleView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\FolderSpecView.xaml.cs">
       <DependentUpon>FolderSpecView.xaml</DependentUpon>
     </Compile>
@@ -167,6 +173,9 @@
     </Compile>
     <Compile Include="Views\NoteView.xaml.cs">
       <DependentUpon>NoteView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsDirView.xaml.cs">
+      <DependentUpon>SettingsDirView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SettingsFolderView.xaml.cs">
       <DependentUpon>SettingsFolderView.xaml</DependentUpon>
@@ -205,6 +214,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\ConsoleView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\FolderSpecView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -222,6 +235,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\NoteView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SettingsDirView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

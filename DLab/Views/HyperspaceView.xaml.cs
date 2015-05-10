@@ -1,5 +1,6 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Input;
+using DLab.ViewModels;
 
 namespace DLab.Views
 {
@@ -27,7 +28,14 @@ namespace DLab.Views
 
         private void MatchedItems_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            UserCommand.Focus();
+            (DataContext as HyperspaceViewModel).DoCommand(e.Text);
+            
+//            UserCommand.Focus();
+        }
+
+        private void MatchedItems_OnPreviewKeyUp(object sender, KeyEventArgs e)
+        {
+//            (DataContext as HyperspaceViewModel).DoCommand(e.Key);
         }
     }
 }

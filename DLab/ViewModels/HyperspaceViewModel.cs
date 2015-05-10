@@ -9,6 +9,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using System.Windows;
+using System.Windows.Input;
 using Caliburn.Micro;
 using DLab.HyperJump;
 
@@ -98,9 +100,11 @@ namespace DLab.ViewModels
                 var part = parts[i];
                 var isLast = i == parts.Length - 1;
 
-                if (part == "*")
+                if (part == ".")
                 {
-                    matchedFolders = isLast ? GetDescendants(matchedFolders) : GetSpecificDescendants(matchedFolders, parts[++i]);
+                    matchedFolders = isLast 
+                        ? GetDescendants(matchedFolders) 
+                        : GetSpecificDescendants(matchedFolders, parts[++i]);
                     continue;
                 }
 
@@ -201,6 +205,45 @@ namespace DLab.ViewModels
         public int Order
         {
             get { return 9; }
+        }
+
+        public void DoCommand(string key)
+        {
+            var commandPrompt = @"C:\Windows\system32\cmd.exe";
+            var powershell = @"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe";
+
+            if (key.ToLower() == "c")
+            {
+                if (!File.Exists(commandPrompt))
+                {
+                    MessageBox.Show("Could not find {0}", commandPrompt);
+                    return;
+                }
+                var args = string.Format(@"/K ""cd /d {0}""", SelectedItem.FullPath);
+                var psi = new ProcessStartInfo(commandPrompt) {Arguments = args};
+                psi.UseShellExecute = false;
+                Process.Start(psi);
+                return;
+            }
+
+            if (key.ToLower() == "p")
+            {
+                if (!File.Exists(powershell))
+                {
+                    MessageBox.Show("Could not find {0}", powershell);
+                    return;
+                }
+                var args = string.Format(@"-NoExit -Command ""& {{Set-Location {0}}}""", SelectedItem.FullPath);
+                var psi = new ProcessStartInfo(powershell) { Arguments = args };
+                psi.UseShellExecute = false;
+                Process.Start(psi);
+            }
+
+            if (key.ToLower() == "e")
+            {
+                var psi = new ProcessStartInfo(SelectedItem.FullPath);
+                Process.Start(psi);
+            }
         }
     }
 
