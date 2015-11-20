@@ -119,5 +119,7 @@ namespace DLab.Domain
     [ProtoContract]
     public class Console : EntityBase
     {
+        [ProtoMember(10)]
+        public char Hotkey { get; set; }
     }
 }

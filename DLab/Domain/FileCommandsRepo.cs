@@ -24,8 +24,27 @@ namespace DLab.Domain
                 using (var file = File.OpenRead("FileCommands.bin"))
                 {
                     FileCommands = Serializer.Deserialize<FileCommands>(file);
+                    FileCommands = RemoveDuplicates(FileCommands);
                 }
                 return FileCommands.Entries;
+            }
+        }
+
+        private void RemoveDuplicates(FileCommands fileCommands)
+        {
+            var d2 = from e in fileCommands.Entries
+                     group e by e.FolderPath into g
+                     where g.Count() > 1
+
+                     
+
+            var dupes = fileCommands.Entries.GroupBy(x => x.FolderPath)
+                            .Where(x => x.Count() > 1)
+                            .SelectMany(@group => @group.Skip(1))
+                            .ToList();
+            foreach (var dupe in dupes)
+            {
+                fileCommands.Entries.Remove(dupe);
             }
         }
 
@@ -37,6 +56,7 @@ namespace DLab.Domain
 
         public void Save(CatalogEntry catalogEntry)
         {
+            var ids = FileCommands.Entries.Where(x => x.Id == catalogEntry.Id).ToList();
             var existingEntry = FileCommands.Entries.SingleOrDefault(x => x.Id == catalogEntry.Id);
             if (existingEntry != null)
             {

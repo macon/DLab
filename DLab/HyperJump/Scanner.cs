@@ -95,7 +95,7 @@ namespace DLab.HyperJump
 
                 var di = new DirectoryInfo(currentFolder.FullPath);
 
-                foreach (var subDi in di.GetDirectories())
+                foreach (var subDi in di.SafeGetDirectories())
                 {
                     var subFolder = new Folder { Name = subDi.Name.ToLower(), FullPath = subDi.FullName.ToLower(), Parent = currentFolder };
                     currentFolder.Children.Add(subFolder);
@@ -105,6 +105,7 @@ namespace DLab.HyperJump
                 yield return currentFolder;
             }
         }
+
 
         private Folder ScanEx(DirectoryInfo startingDi)
         {
@@ -120,6 +121,24 @@ namespace DLab.HyperJump
             }
 
             return f;
+        }
+    }
+
+    public static class Extensions
+    {
+        public static DirectoryInfo[] SafeGetDirectories(this DirectoryInfo di)
+        {
+            var result = new DirectoryInfo[0];
+
+            try
+            {
+                result = di.GetDirectories();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                
+            }
+            return result;
         }
     }
 }

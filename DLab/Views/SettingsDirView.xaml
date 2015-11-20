@@ -24,6 +24,7 @@
                 <DataGridTextColumn Header="Name" Binding="{Binding Command}" />
                 <DataGridTextColumn Header="Command" Binding="{Binding Target}" />
                 <DataGridTextColumn Header="Args" Binding="{Binding Arguments}" />
+                <DataGridTextColumn Header="Hotkey" Binding="{Binding Hotkey}" />
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

@@ -153,6 +153,9 @@
     <Compile Include="Views\ClipboardView.xaml.cs">
       <DependentUpon>ClipboardView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\Command\List.xaml.cs">
+      <DependentUpon>List.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\CommandView.xaml.cs">
       <DependentUpon>CommandView.xaml</DependentUpon>
     </Compile>
@@ -207,6 +210,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\ClipboardView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Command\List.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

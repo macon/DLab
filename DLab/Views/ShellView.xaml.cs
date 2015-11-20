@@ -45,19 +45,18 @@ namespace DLab.Views
         {
             InitializeComponent();
             InitializeApp();
-            _logger = LogManager.GetLogger("Default");
+            _logger = LogManager.GetLogger("ShellView");
             ActiveClipboardString = "";
         }
 
         private void InitializeApp()
         {
             Loaded += ShellView_Loaded;
-            Application.Current.Deactivated += Current_Deactivated;
-//            _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToCommand);
+//            Application.Current.Deactivated += Current_Deactivated;
             _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Alt, true, SetFocusToCommand);
             _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Alt, true, SetFocusToClipboard);
             _showSettingsHotKey = new CustomHotKey("_showSettingsHotKey", Key.S, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToSettings);
-            _showDirHotKey = new CustomHotKey("_showDirHotKey", Key.D, ModifierKeys.Alt, true, SetFocusToDir);
+            _showDirHotKey = new CustomHotKey("_showDirHotKey", Key.D, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToDir);
         }
 
         void Current_Deactivated(object sender, EventArgs e)
@@ -160,6 +159,11 @@ namespace DLab.Views
 
                 clipboardItems.UpdateLayout();
                 var clipboardItem = (ListBoxItem) clipboardItems.ItemContainerGenerator.ContainerFromItem(clipboardItems.SelectedItem);
+                if (clipboardItem == null)
+                {
+                    _logger.WarnFormat("Failed to get SelectedItem from ClipboardItems {0}", clipboardItems.SelectedItem);
+                    return;
+                }
                 clipboardItem.Focus();
             });
         }

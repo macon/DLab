@@ -30,7 +30,7 @@ namespace DLab.ViewModels
 
 	    public ClipboardViewModel(IEventAggregator eventAggregator, ClipboardRepo clipboardRepo)
         {
-            _logger = LogManager.GetLogger("Default");
+            _logger = LogManager.GetLogger("ClipboardViewModel");
             _eventAggregator = eventAggregator;
 	        _clipboardRepo = clipboardRepo;
 	        _eventAggregator.Subscribe(this);
@@ -41,6 +41,14 @@ namespace DLab.ViewModels
             _masterList = new List<ClipboardItemViewModel>();
 
 	        HideStateMsg = false;
+
+            var clipboardItems = LoadClipboardItems();
+            _masterList.AddRange(clipboardItems);
+
+            SafeAddToClipboardHistory(Clipboard.GetText());
+            RebuildClipboardItems();
+
+            HideStateMsg = true;
         }
 
         private async Task ClipboardTidyAsync(TimeSpan interval, CancellationToken token)
@@ -76,19 +84,11 @@ namespace DLab.ViewModels
             _cancelClipboardTidyTask.Cancel();
 	    }
 
-	    protected async override void OnViewAttached(object view, object context)
+	    protected override void OnViewAttached(object view, object context)
 	    {
+            _logger.Info("In OnViewAttached");
 	        base.OnViewAttached(view, context);
             if (_isInitialised) return;
-
-            var clipboardItems = await LoadClipboardItemsAsync();
-            _masterList.Clear();
-            _masterList.AddRange(clipboardItems);
-
-            SafeAddToClipboardHistory(Clipboard.GetText());
-            RebuildClipboardItems();
-
-            HideStateMsg = true;
 
             _cancelClipboardTidyTask = new CancellationTokenSource();
 	        Task.Run(() => 
@@ -101,6 +101,11 @@ namespace DLab.ViewModels
 	    private async Task<List<ClipboardItemViewModel>> LoadClipboardItemsAsync()
 	    {
 	        return await Task.Run(() => _clipboardRepo.Items.Select(x => new ClipboardItemViewModel(x)).ToList());
+	    }
+
+	    private List<ClipboardItemViewModel> LoadClipboardItems()
+	    {
+	        return _clipboardRepo.Items.Select(x => new ClipboardItemViewModel(x)).ToList();
 	    }
 
 	    public BindableCollection<ClipboardItemViewModel> ClipboardItems { get; set; }
@@ -119,12 +124,10 @@ namespace DLab.ViewModels
             }
 
             var clipboardText = SafeReadClipboardText();
-            if (string.IsNullOrEmpty(clipboardText)) return;
+            if (string.IsNullOrWhiteSpace(clipboardText)) return;
 
             SafeAddToClipboardHistory(clipboardText);
-
             RebuildClipboardItems();
-            SelectedClipboardItem = ClipboardItems.First();
         }
 
         public string SafeReadClipboardText()
@@ -174,6 +177,11 @@ namespace DLab.ViewModels
                 return;
             }
             _masterList.Insert(0, new ClipboardItemViewModel(text));
+            _logger.InfoFormat("Inserted '{0}' at top of _masterList", text);
+	        foreach (var model in _masterList)
+	        {
+                _logger.InfoFormat("\t\t{0}", model.Text);
+            }
 	    }
 
 	    public void SetClipboardBlind(string text)

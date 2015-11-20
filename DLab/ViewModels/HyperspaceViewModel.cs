@@ -10,7 +10,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Windows;
-using System.Windows.Input;
 using Caliburn.Micro;
 using DLab.HyperJump;
 
@@ -27,10 +26,8 @@ namespace DLab.ViewModels
         {
             Items = new ObservableCollection<Folder>();
             _scanner = new Scanner();
-            RootFolder = "d:\\dev";
+            RootFolder = "d:\\git";
             DisplayName = "Dir";
-
-            //            _textInput = new ObservablePropertyBacking<string>();
 
             _textInput
                 .Throttle(TimeSpan.FromMilliseconds(300))

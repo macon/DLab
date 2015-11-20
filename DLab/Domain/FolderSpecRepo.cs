@@ -36,6 +36,12 @@ namespace DLab.Domain
             {
                 _folderDirectory.Folders.Remove(existingEntry);
             }
+            var entriesByName = _folderDirectory.Folders.Where(x => x.FolderName.Equals(folderSpec.FolderName, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            foreach (var entry in entriesByName)
+            {
+                _folderDirectory.Folders.Remove(entry);
+            }
+
             _folderDirectory.Folders.Add(folderSpec);
         }
 

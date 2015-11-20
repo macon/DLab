@@ -49,7 +49,7 @@
                 <ContextMenu>
                     <MenuItem Header="Command" Click="OnOpenClick" InputGestureText="Alt+Space" />
                     <MenuItem Header="Clipboard" Click="OnOpenClipboardClick" InputGestureText="Ctrl+Alt+C" />
-                    <MenuItem Header="Dir" Click="OnOpenDirClick" InputGestureText="Alt+D" />
+                    <MenuItem Header="Dir" Click="OnOpenDirClick" InputGestureText="Ctrl+Alt+D" />
                     <MenuItem Header="Settings" Click="OnOpenSettingsClick" />
                     <MenuItem Header="Exit" Click="OnExitClick" />
                 </ContextMenu>

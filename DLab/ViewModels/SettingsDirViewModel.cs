@@ -110,6 +110,16 @@ namespace DLab.ViewModels
             }
         }
 
+        public char Hotkey
+        {
+            get { return _console.Hotkey; }
+            set
+            {
+                if (char.ToLower(value).Equals(Instance.Hotkey)) return;
+                _console.Hotkey = char.ToLower(value);
+            }
+        }
+
         public bool Unsaved
         {
             get { return Id == default(int); }

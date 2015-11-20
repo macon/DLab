@@ -1,7 +1,6 @@
-﻿using System.Diagnostics;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 using System.Windows.Input;
+using DLab.ViewModels;
 
 namespace DLab.Views
 {
@@ -49,6 +48,14 @@ namespace DLab.Views
                 var clipboardItem = (ListBoxItem)ClipboardItems.ItemContainerGenerator.ContainerFromItem(ClipboardItems.SelectedItem);
                 clipboardItem.Focus();
             }
+        }
+
+        private void ClipboardItems_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var viewModel = DataContext as ClipboardViewModel;
+            if (viewModel == null) return;
+
+            viewModel.Paste();
         }
     }
 }

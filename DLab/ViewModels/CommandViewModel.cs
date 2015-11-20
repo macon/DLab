@@ -19,6 +19,7 @@ namespace DLab.ViewModels
     public class CommandViewModel : Screen, ITabViewModel
     {
         private readonly IEventAggregator _eventAggregator;
+        private readonly IAppServices _appServices;
         private readonly CommandResolver _commandResolver;
         private string _title;
         private BindableCollection<MatchResult> _matchedItems;
@@ -30,6 +31,7 @@ namespace DLab.ViewModels
         {
             _eventAggregator = appServices.EventAggregator;
             _log = appServices.Log;
+            _appServices = appServices;
             _commandResolver = commandResolver;
             _eventAggregator.Subscribe(this);
             _matchedItems = new BindableCollection<MatchResult>();
@@ -64,13 +66,15 @@ namespace DLab.ViewModels
 
                 if (!string.IsNullOrEmpty(_userCommand))
                 {
-                    r = _commandResolver.GetMatches(_userCommand);
+                    r = _commandResolver.GetMatches(_userCommand, 10);
                 }
                 MatchedItems.Clear();
                 if (!r.Any()) return;
                 MatchedItems.AddRange(r);
                 SelectedMatchedItem = MatchedItems.First();
                 EnhanceWithIconAsync();
+
+//                _appServices.WindowManager.ShowWindow(this, "List");
             }
         }
 

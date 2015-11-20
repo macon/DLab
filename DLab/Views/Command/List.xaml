@@ -1,0 +1,27 @@
+﻿<Window x:Class="DLab.Views.Command.List"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:cal="http://www.caliburnproject.org"
+        Title="CommandListView" Height="300" Width="300"
+        SizeToContent="Height">
+    
+    <Window.Visibility>
+        <Binding Path="IsHidden" Mode="TwoWay" Converter="{StaticResource BoolToHiddenConverter}"/>
+    </Window.Visibility>
+
+    <DockPanel>
+        <ListBox Name="MatchedItems" VerticalAlignment="Stretch" TabIndex="1">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <DockPanel cal:View.Model="{Binding}">
+                        <Image Margin="2" DockPanel.Dock="Left" Source="{Binding Icon}"/>
+                        <StackPanel >
+                            <TextBlock Text="{Binding Path=CommandModel.Command}" ></TextBlock>
+                            <TextBlock Text="{Binding Path=CommandModel.Target}" Margin="10 0 0 0" Foreground="CadetBlue"></TextBlock>
+                        </StackPanel>
+                    </DockPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</Window>

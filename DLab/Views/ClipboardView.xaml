@@ -16,7 +16,7 @@
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
 
             <DataTemplate x:Key="ClipboardItemTemplate">
-                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}"></Label>
+                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}" FontSize="10" Padding="0 0 0 0" ></Label>
             </DataTemplate>
 
             <Style TargetType="{x:Type ListBoxItem}">
@@ -31,24 +31,18 @@
             </Style>
         </DockPanel.Resources>
 
+        <TextBox Name="SearchText" DockPanel.Dock="Top" Height="20" HorizontalAlignment="Stretch" PreviewKeyUp="SearchText_OnPreviewKeyUp"></TextBox>
+
         <Label DockPanel.Dock="Bottom" Height="20" Visibility="{Binding HideStateMsg, Converter={StaticResource BoolToHiddenConverter}}">Loading</Label>
 
-        <TextBox Name="SearchText" DockPanel.Dock="Bottom" Height="20" HorizontalAlignment="Stretch" PreviewKeyUp="SearchText_OnPreviewKeyUp"></TextBox>
 		<Button Name="Paste" DockPanel.Dock="Bottom" Height="20" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
         
 		<ListBox Name="ClipboardItems" 
 					TabIndex="0" 
 					ItemTemplate="{StaticResource ClipboardItemTemplate}" 
                     PreviewTextInput="ClipboardItems_OnPreviewTextInput"
+                    MouseDoubleClick="ClipboardItems_OnMouseDoubleClick"
 					AlternationCount="2">
-<!--            <ListBox.ItemContainerStyle>-->
-<!--                <Style TargetType="ListBoxItem">-->
-<!--                    <Setter Property="Height" Value="25" />-->
-<!--                    <Setter Property="VerticalContentAlignment" Value="Center"></Setter>-->
-<!--                    <Setter Property="Margin" Value="1"></Setter>-->
-<!--                    <Setter Property="Padding" Value="1"></Setter>-->
-<!--                </Style>-->
-<!--            </ListBox.ItemContainerStyle>-->
         </ListBox>
     </DockPanel>
 </UserControl>
