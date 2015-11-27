@@ -3,27 +3,121 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:DLab.Views"
         xmlns:infrastructure="clr-namespace:DLab.Infrastructure"
+        xmlns:shell="clr-namespace:Microsoft.Windows.Shell;assembly=Microsoft.Windows.Shell"
         xmlns:converters="clr-namespace:DLab.Converters"
         Title="ShellView"
-        Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"
-        Height="300" Width="600" ShowInTaskbar="False"  >
-    
-    <Window.Resources>
-        <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
+        Height="300" Width="600" ShowInTaskbar="False" >
+<!--    Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"-->
 
-<!--        <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">-->
-<!--            <Setter Property="Template">-->
-<!--                <Setter.Value>-->
-<!--                    <ControlTemplate TargetType="Button">-->
-<!--                        <Border Background="Transparent">-->
-<!--                            <ContentPresenter/>-->
-<!--                        </Border>-->
-<!--                    </ControlTemplate>-->
-<!--                </Setter.Value>-->
-<!--            </Setter>-->
-<!--        </Style>-->
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome
+            ResizeBorderThickness="6"
+            CaptionHeight="43"
+            CornerRadius="25,25,10,10"
+            GlassFrameThickness="0">
+        </shell:WindowChrome>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="\Resources\GlassButton.xaml"/>
+                <ResourceDictionary Source="\Resources\GlassIcon.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
+            <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent">
+                                <ContentPresenter/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+
     </Window.Resources>
 
+    <Grid>
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        </Grid.Resources>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!--provide the background for the entire form.  In practice, this appears as the window's resize border, because the title and window content obscure the rest-->
+        <Border CornerRadius="10,10,5,5" Grid.RowSpan="2" BorderThickness="3" BorderBrush="LightSteelBlue">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#99bbbbff" Offset="0" />
+                    <GradientStop Color="#ff7777bb" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <!--title bar-->
+        <Border Grid.Row="0" CornerRadius="5,5,0,0" BorderThickness="3,3,3,1" BorderBrush="LightSteelBlue" Margin="3 3 3 3">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#ffbbbbff" Offset="0" />
+                    <GradientStop Color="#ff7777bb" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+<!--            <Border.BitmapEffect>-->
+<!--                        <DropShadowBitmapEffect Direction="305" Opacity="1" ShadowDepth="5" Color="White" />-->
+<!--                    </Border.BitmapEffect>-->
+
+            <!--Window Icon and Title-->
+            <DockPanel>
+                <Image Margin="5 0 5 0" DockPanel.Dock="Left" Source="\Resources/robot-26.png" Height="30"></Image>
+                <TextBlock DockPanel.Dock="Left" Text="Gadget" FontFamily="Calibri" FontWeight="Bold" FontSize="26" Foreground="#FF000044" VerticalAlignment="Center"/>
+                <Button Name="Settings" DockPanel.Dock="Right"  Style="{StaticResource TransparentStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Image Source="pack://application:,,,/Dlab;component/Resources/settings2-26.png" Height="26" Width="26" Margin="3 3"></Image>
+                </Button>
+                <Label Name="SystemStatus" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"></Label>
+            </DockPanel>
+        </Border>
+
+        <!--Content-->
+        <Grid Grid.Row="1">
+            <DockPanel>
+
+                <infrastructure:NotifyIcon
+			        x:Name="notifyIcon"
+			        Text="Gadget"
+			        Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"
+			        BalloonTipText="Gadget"
+			        BalloonTipTitle="Gadget"
+			        BalloonTipIcon="Info"
+			        MouseDoubleClick="OnNotifyIconDoubleClick">
+                    <infrastructure:NotifyIcon.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Command" Click="OnOpenClick" InputGestureText="Alt+Space" />
+                            <MenuItem Header="Clipboard" Click="OnOpenClipboardClick" InputGestureText="Ctrl+Alt+C" />
+                            <MenuItem Header="Dir" Click="OnOpenDirClick" InputGestureText="Ctrl+Alt+D" />
+                            <MenuItem Header="Settings" Click="OnOpenSettingsClick" />
+                            <MenuItem Header="Exit" Click="OnExitClick" />
+                        </ContextMenu>
+                    </infrastructure:NotifyIcon.ContextMenu>
+                </infrastructure:NotifyIcon>
+
+                <ContentControl Name="TabViewModel"/>
+
+
+            </DockPanel>
+        </Grid>
+    </Grid>
+    
+    <!-- debg -->    
     <Window.Visibility>
         <Binding Path="IsHidden" Mode="TwoWay" Converter="{StaticResource BoolToHiddenConverter}"/>
     </Window.Visibility>
@@ -32,37 +126,5 @@
         <KeyBinding Key="Escape" Command="{x:Static local:CloseThisWindowCommand.Instance}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}" />
     </Window.InputBindings>
     
-    <DockPanel>
-        <DockPanel.Resources>
-            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        </DockPanel.Resources>
 
-        <infrastructure:NotifyIcon
-			x:Name="notifyIcon"
-			Text="Gadget"
-			Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"
-			BalloonTipText="Gadget"
-			BalloonTipTitle="Gadget"
-			BalloonTipIcon="Info"
-			MouseDoubleClick="OnNotifyIconDoubleClick">
-            <infrastructure:NotifyIcon.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Command" Click="OnOpenClick" InputGestureText="Alt+Space" />
-                    <MenuItem Header="Clipboard" Click="OnOpenClipboardClick" InputGestureText="Ctrl+Alt+C" />
-                    <MenuItem Header="Dir" Click="OnOpenDirClick" InputGestureText="Ctrl+Alt+D" />
-                    <MenuItem Header="Settings" Click="OnOpenSettingsClick" />
-                    <MenuItem Header="Exit" Click="OnExitClick" />
-                </ContextMenu>
-            </infrastructure:NotifyIcon.ContextMenu>
-        </infrastructure:NotifyIcon>
-        
-        <DockPanel DockPanel.Dock="Bottom">
-            <Button Name="Settings" DockPanel.Dock="Right" Style="{StaticResource TransparentStyle}">
-                <Image Source="pack://application:,,,/Dlab;component/Resources/settings2-26.png" Height="26" Width="26" Margin="3 3"></Image>
-            </Button>
-            <Label Name="SystemStatus" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"></Label>
-        </DockPanel>
-        
-        <ContentControl Name="TabViewModel"/>
-    </DockPanel>
 </Window>

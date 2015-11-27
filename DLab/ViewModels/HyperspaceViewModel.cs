@@ -26,7 +26,7 @@ namespace DLab.ViewModels
         {
             Items = new ObservableCollection<Folder>();
             _scanner = new Scanner();
-            RootFolder = "d:\\git";
+            RootFolder = "c:\\dev";
             DisplayName = "Dir";
 
             _textInput

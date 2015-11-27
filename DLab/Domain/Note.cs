@@ -13,7 +13,6 @@ namespace DLab.Domain
         public string Text { get; set; }
 
         public IList<CatalogEntry> Commands { get; set; }
-        public IList<ClipboardItem> Clips { get; set; }
         public IList<string> Tags { get; set; }
     }
 }

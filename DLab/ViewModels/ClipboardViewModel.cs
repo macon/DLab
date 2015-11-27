@@ -251,7 +251,7 @@ namespace DLab.ViewModels
 	    {
 	        ClipboardItems.Clear();
             ClipboardItems.AddRange(items ?? _masterList);
-	        SelectedClipboardItem = ClipboardItems.First();
+	        SelectedClipboardItem = ClipboardItems.FirstOrDefault();
 	    }
 
        

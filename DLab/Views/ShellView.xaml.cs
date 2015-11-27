@@ -379,6 +379,11 @@ namespace DLab.Views
 //                pnlContent.Children.Add(img);
             }
         }
+
+        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Clicked");
+        }
     }
 
     public class CloseThisWindowCommand : ICommand

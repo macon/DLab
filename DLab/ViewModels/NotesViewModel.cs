@@ -18,11 +18,7 @@ namespace DLab.ViewModels
                 {
                     Title = "Sample note",
                     Text = "The quick brown fox etc",
-                    Tags = new[] {"git", "tech"},
-                    Clips = new[]
-                    {
-                        new ClipboardItem() {Text = "jumped over"}
-                    }
+                    Tags = new[] {"git", "tech"}
                 })
             };
         }

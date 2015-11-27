@@ -24,7 +24,7 @@ namespace DLab.Domain
                 using (var file = File.OpenRead("FileCommands.bin"))
                 {
                     FileCommands = Serializer.Deserialize<FileCommands>(file);
-                    FileCommands = RemoveDuplicates(FileCommands);
+                    RemoveDuplicates(FileCommands);
                 }
                 return FileCommands.Entries;
             }
@@ -32,16 +32,22 @@ namespace DLab.Domain
 
         private void RemoveDuplicates(FileCommands fileCommands)
         {
-            var d2 = from e in fileCommands.Entries
-                     group e by e.FolderPath into g
-                     where g.Count() > 1
+            var groups = fileCommands.Entries.GroupBy(x => x.Fullname())
+                                    .Where(x => x.Count() > 1).ToList();
 
-                     
-
-            var dupes = fileCommands.Entries.GroupBy(x => x.FolderPath)
+            var dupes = fileCommands.Entries.GroupBy(x => x.Fullname())
                             .Where(x => x.Count() > 1)
-                            .SelectMany(@group => @group.Skip(1))
+                            .SelectMany(g => g.Skip(1))
                             .ToList();
+            foreach (var dupe in dupes)
+            {
+                fileCommands.Entries.Remove(dupe);
+            }
+
+            dupes = fileCommands.Entries.GroupBy(x => x.Id)
+                                        .Where(x => x.Count() > 1)
+                                        .SelectMany(g => g.Skip(1))
+                                        .ToList();
             foreach (var dupe in dupes)
             {
                 fileCommands.Entries.Remove(dupe);
