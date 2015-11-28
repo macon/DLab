@@ -6,17 +6,19 @@
         xmlns:shell="clr-namespace:Microsoft.Windows.Shell;assembly=Microsoft.Windows.Shell"
         xmlns:converters="clr-namespace:DLab.Converters"
         Title="ShellView"
+        Background="#ff7777bb"
         Height="300" Width="600" ShowInTaskbar="False" >
 <!--    Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"-->
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome
-            ResizeBorderThickness="6"
+            ResizeBorderThickness="3"
+            CornerRadius="0"
             CaptionHeight="43"
-            CornerRadius="25,25,10,10"
             GlassFrameThickness="0">
         </shell:WindowChrome>
     </shell:WindowChrome.WindowChrome>
+<!--    CornerRadius="10,10,10,10"-->
 
     <Window.Resources>
         <ResourceDictionary>
@@ -25,6 +27,7 @@
                 <ResourceDictionary Source="\Resources\GlassIcon.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
+            <converters:ShortenPathConverter x:Key="Shortener"/>
             <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">
                 <Setter Property="Template">
                     <Setter.Value>
@@ -54,34 +57,36 @@
         </Grid.RowDefinitions>
 
         <!--provide the background for the entire form.  In practice, this appears as the window's resize border, because the title and window content obscure the rest-->
-        <Border CornerRadius="10,10,5,5" Grid.RowSpan="2" BorderThickness="3" BorderBrush="LightSteelBlue">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                    <GradientStop Color="#99bbbbff" Offset="0" />
-                    <GradientStop Color="#ff7777bb" Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
+        <Border Grid.RowSpan="2" BorderThickness="3" BorderBrush="#ff7777bb">
+<!--            <Border.Background>-->
+<!--                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">-->
+<!--                    <GradientStop Color="#99bbbbff" Offset="0" />-->
+<!--                    <GradientStop Color="#ff7777bb" Offset="1" />-->
+<!--                </LinearGradientBrush>-->
+<!--            </Border.Background>-->
         </Border>
 
         <!--title bar-->
-        <Border Grid.Row="0" CornerRadius="5,5,0,0" BorderThickness="3,3,3,1" BorderBrush="LightSteelBlue" Margin="3 3 3 3">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                    <GradientStop Color="#ffbbbbff" Offset="0" />
-                    <GradientStop Color="#ff7777bb" Offset="1" />
-                </LinearGradientBrush>
-            </Border.Background>
-
-<!--            <Border.BitmapEffect>-->
-<!--                        <DropShadowBitmapEffect Direction="305" Opacity="1" ShadowDepth="5" Color="White" />-->
-<!--                    </Border.BitmapEffect>-->
+        <Border Grid.Row="0" BorderThickness="3,3,3,1" BorderBrush="#ff7777bb" Margin="3 3 3 3">
 
             <!--Window Icon and Title-->
-            <DockPanel>
-                <Image Margin="5 0 5 0" DockPanel.Dock="Left" Source="\Resources/robot-26.png" Height="30"></Image>
-                <TextBlock DockPanel.Dock="Left" Text="Gadget" FontFamily="Calibri" FontWeight="Bold" FontSize="26" Foreground="#FF000044" VerticalAlignment="Center"/>
+            <DockPanel Background="#ff7777bb">
                 <Button Name="Settings" DockPanel.Dock="Right"  Style="{StaticResource TransparentStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Image Source="pack://application:,,,/Dlab;component/Resources/settings2-26.png" Height="26" Width="26" Margin="3 3"></Image>
+                    <Image Margin="5 0 5 0" Source="\Resources/robot-26.png" Height="30">
+                        <Image.Style>
+                            <Style TargetType="{x:Type Image}">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect ShadowDepth="0" Color="Blue" Opacity="1" BlurRadius="20"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
                 </Button>
                 <Label Name="SystemStatus" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"></Label>
             </DockPanel>
@@ -110,9 +115,7 @@
                     </infrastructure:NotifyIcon.ContextMenu>
                 </infrastructure:NotifyIcon>
 
-                <ContentControl Name="TabViewModel"/>
-
-
+                <ContentControl Name="ActiveItem"/>
             </DockPanel>
         </Grid>
     </Grid>

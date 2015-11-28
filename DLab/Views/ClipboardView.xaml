@@ -16,7 +16,7 @@
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
 
             <DataTemplate x:Key="ClipboardItemTemplate">
-                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}" FontSize="10" Padding="0 0 0 0" ></Label>
+                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}" FontSize="12" Padding="0 0 0 0" ></Label>
             </DataTemplate>
 
             <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">

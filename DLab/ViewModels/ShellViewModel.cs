@@ -1,10 +1,12 @@
-﻿using Caliburn.Micro;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Caliburn.Micro;
 using DLab.Events;
 using StructureMap;
 
 namespace DLab.ViewModels
 {
-    public class ShellViewModel : Screen, IHandle<UserActionEvent>, IHandle<SystemStatusChangeEvent>
+    public class ShellViewModel : Conductor<ITabViewModel>.Collection.OneActive, IHandle<UserActionEvent>, IHandle<SystemStatusChangeEvent>
     {
         private readonly IWindowManager _windowManager;
         private readonly IEventAggregator _eventAggregator;
@@ -12,7 +14,36 @@ namespace DLab.ViewModels
         private bool _isHidden;
         private SettingsViewModel _settingViewModel;
         private bool _isBusy;
-        public Screen TabViewModel { get; set; }
+//        public Screen ActiveViewModel => ActiveItem as Screen;
+        public Screen CommandViewModel { get; set; }
+        public Screen ClipboardViewModel { get; set; }
+
+        public ShellViewModel(IWindowManager windowManager, IEventAggregator eventAggregator, IViewModelFactory viewModelFactory)
+        {
+            _windowManager = windowManager;
+            _eventAggregator = eventAggregator;
+            _viewModelFactory = viewModelFactory;
+            _eventAggregator.Subscribe(this);
+
+            CommandViewModel = _viewModelFactory.GetViewModel<CommandViewModel>();
+            ClipboardViewModel = _viewModelFactory.GetViewModel<ClipboardViewModel>();
+            Items.AddRange(new []
+            {
+                _viewModelFactory.GetViewModel<CommandViewModel>() as ITabViewModel,
+                _viewModelFactory.GetViewModel<ClipboardViewModel>() as ITabViewModel
+            });
+            ActivateCommandModel();
+        }
+
+        public void ActivateCommandModel()
+        {
+            ActivateItem(Items.First(x => x is CommandViewModel));
+        }
+
+        public void ActivateClipboardModel()
+        {
+            ActivateItem(Items.First(x => x is ClipboardViewModel));
+        }
 
         public bool IsHidden
         {
@@ -32,16 +63,6 @@ namespace DLab.ViewModels
                 _isBusy = value;
                 NotifyOfPropertyChange();
             }
-        }
-
-        public ShellViewModel(IWindowManager windowManager, IEventAggregator eventAggregator, IViewModelFactory viewModelFactory)
-        {
-            _windowManager = windowManager;
-            _eventAggregator = eventAggregator;
-            _viewModelFactory = viewModelFactory;
-            DisplayName = "Gadget";
-            TabViewModel = _viewModelFactory.GetViewModel<TabViewModel>();
-            _eventAggregator.Subscribe(this);
         }
 
         public void Settings()

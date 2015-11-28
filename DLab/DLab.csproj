@@ -112,6 +112,7 @@
     <Compile Include="Behaviours\AccessKeyScoper.cs" />
     <Compile Include="Behaviours\Attached.cs" />
     <Compile Include="Behaviours\FocusBehaviour.cs" />
+    <Compile Include="Converters\ShortenPathConverter.cs" />
     <Compile Include="Domain\ClipboardItem.cs" />
     <Compile Include="Domain\ClipboardRepo.cs" />
     <Compile Include="Domain\CommandResolver.cs" />

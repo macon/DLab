@@ -136,8 +136,9 @@ namespace DLab.Views
         {
             SetFocus(0, () =>
             {
-                var view = TabViewModel.Content as TabView;
-                var child = FindChild<TextBox>(view.Items, "UserCommand");
+                _vm.ActivateCommandModel();
+                var view = ActiveItem.Content as CommandView;
+                var child = view.UserCommand;
                 child.Text = "";
                 child.Focus();
             });
@@ -149,8 +150,9 @@ namespace DLab.Views
 
             SetFocus(1, () =>
             {
-                var view = TabViewModel.Content as TabView;
-                var clipboardItems = FindChild<ListBox>(view.Items, "ClipboardItems");
+                _vm.ActivateClipboardModel();
+                var view = ActiveItem.Content as ClipboardView;
+                var clipboardItems = view.ClipboardItems;
 
                 clipboardItems.Focus();
 
@@ -179,7 +181,7 @@ namespace DLab.Views
         {
             SetFocus(3, () =>
             {
-                var view = TabViewModel.Content as TabView;
+                var view = ActiveItem.Content as TabView;
                 var child = FindChild<TextBox>(view.Items, "UserCommand");
                 child.Text = "";
                 child.Focus();
@@ -191,12 +193,12 @@ namespace DLab.Views
             Activate();
             Application.Current.MainWindow.Visibility = Visibility.Visible;
 
-            var view = TabViewModel.Content as TabView;
+//            var view = ActiveViewModel.Content as TabView;
 
             Application.Current.Dispatcher.BeginInvoke(
                 (Action)delegate
                       {
-                          view.Items.SelectedIndex = tabIndex;
+//                          view.Items.SelectedIndex = tabIndex;
 
                           Application.Current.Dispatcher.BeginInvoke
                                     (focusCommand, DispatcherPriority.Render, null);
@@ -305,7 +307,6 @@ namespace DLab.Views
 
         private void DrawContent()
         {
-
             if (Clipboard.ContainsText())
             {
                 IDataObject clipData = null;
