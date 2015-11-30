@@ -9,7 +9,7 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
              behaviours:FocusBehavior.FocusFirst="true">
-    <DockPanel Background="#ff7777bb">
+    <DockPanel Background="#2D2D30">
         <DockPanel.Resources>
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
             <converters:ShortenPathConverter x:Key="Shortener"/>
@@ -27,7 +27,7 @@
             </DockPanel>
 
             <ListBox Name="MatchedItems" VerticalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Hidden" TabIndex="1" Margin="5 0 5 5"
-                     PreviewTextInput="MatchedItems_OnPreviewTextInput" Background="#ff7777bb" BorderThickness="0">
+                     PreviewTextInput="MatchedItems_OnPreviewTextInput" Background="#2D2D30" BorderThickness="0">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <DockPanel cal:View.Model="{Binding}">

@@ -55,25 +55,27 @@ namespace DLab.ViewModels
 			get
 			{
 				var parts = Text.Split(new[]{'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
+			    if (parts.Length == 0) { return ""; }
+
 			    try
 			    {
 			        return parts.Length > 1 
-			            ? string.Format("{0}\n{1}{2}", ParseLine(parts[0]), ParseLine(parts[1]), parts.Length>2 ? "..." : "") 
-			            : ParseLine(parts[0]);
+			            ? $"{TrimLine(parts[0])}\n{TrimLine(parts[1])}{(parts.Length > 2 ? "..." : "")}"
+			            : TrimLine(parts[0]);
 			    }
                 catch (IndexOutOfRangeException e)
                 {
-                    var _logger = LogManager.GetLogger("Default");
-                    _logger.ErrorFormat(Text);
-                    _logger.Error(e);
+                    var logger = LogManager.GetLogger("Default");
+                    logger.ErrorFormat(Text);
+                    logger.Error(e);
                     return Text.Substring(0, 100);
                 }
 			}
 		}
 
-		private string ParseLine(string text)
+		private string TrimLine(string text)
 		{
-			return text.Length > LineLength ? string.Format("{0}...", text.Substring(0, LineLength)) : text;
+			return text.Length > LineLength ? $"{text.Substring(0, LineLength)}..." : text;
 		}
 
 	    public bool IsSaved

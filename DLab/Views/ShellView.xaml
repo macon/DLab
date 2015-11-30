@@ -6,7 +6,7 @@
         xmlns:shell="clr-namespace:Microsoft.Windows.Shell;assembly=Microsoft.Windows.Shell"
         xmlns:converters="clr-namespace:DLab.Converters"
         Title="ShellView"
-        Background="#ff7777bb"
+        Background="#2D2D30"
         Height="300" Width="600" ShowInTaskbar="False" >
 <!--    Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"-->
 
@@ -57,20 +57,20 @@
         </Grid.RowDefinitions>
 
         <!--provide the background for the entire form.  In practice, this appears as the window's resize border, because the title and window content obscure the rest-->
-        <Border Grid.RowSpan="2" BorderThickness="3" BorderBrush="#ff7777bb">
+        <Border Grid.RowSpan="2" BorderThickness="3" BorderBrush="#2D2D30">
 <!--            <Border.Background>-->
 <!--                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">-->
 <!--                    <GradientStop Color="#99bbbbff" Offset="0" />-->
-<!--                    <GradientStop Color="#ff7777bb" Offset="1" />-->
+<!--                    <GradientStop Color="#2D2D30" Offset="1" />-->
 <!--                </LinearGradientBrush>-->
 <!--            </Border.Background>-->
         </Border>
 
         <!--title bar-->
-        <Border Grid.Row="0" BorderThickness="3,3,3,1" BorderBrush="#ff7777bb" Margin="3 3 3 3">
+        <Border Grid.Row="0" BorderThickness="3,3,3,1" BorderBrush="#2D2D30" Margin="3 3 3 3">
 
             <!--Window Icon and Title-->
-            <DockPanel Background="#ff7777bb">
+            <DockPanel Background="#2D2D30">
                 <Button Name="Settings" DockPanel.Dock="Right"  Style="{StaticResource TransparentStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Image Margin="5 0 5 0" Source="\Resources/robot-26.png" Height="30">
                         <Image.Style>

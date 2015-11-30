@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using Caliburn.Micro;
 using DLab.Domain;
 using DLab.Infrastructure;
@@ -119,7 +121,7 @@ namespace DLab.ViewModels
         {
             if (!Clipboard.ContainsText())
             {
-                _logger.Info("Could not read from CB 2");
+                _logger.Info("Clipboard.ContainsText returned false");
                 return;
             }
 
@@ -189,9 +191,12 @@ namespace DLab.ViewModels
             var s = Clipboard.ContainsText() ? Clipboard.GetText() : "";
             if (Clipboard.ContainsText() && s.Equals(text, StringComparison.InvariantCultureIgnoreCase)) { return; }
 
-            ShellView.ActiveClipboardString = text;
+//            ShellView.ActiveClipboardString = text;
+            ActiveClipboardString = text;
             Clipboard.SetText(text);
         }
+
+	    public string ActiveClipboardString { get; private set; }
 
 	    public string SearchText
 	    {
@@ -234,7 +239,78 @@ namespace DLab.ViewModels
 	        }
 	    }
 
-	    private void BringItemToTop(string clipboardText)
+        private void DrawContent()
+        {
+            if (Clipboard.ContainsText())
+            {
+                IDataObject clipData = null;
+                var s = "";
+                try
+                {
+                    s = Clipboard.GetText();
+                    clipData = Clipboard.GetDataObject();
+                }
+                catch (COMException e)
+                {
+                    _logger.Error(e);
+                    return;
+                }
+
+                if (clipData == null) return;
+
+                var clipboardText = "";
+                try
+                {
+                    if (clipData.GetDataPresent(DataFormats.Text))
+                    {
+                        clipboardText = (string)clipData.GetData(DataFormats.Text, false);
+                    }
+                    else
+                    {
+                        _logger.InfoFormat("data in clipboard not in right format");
+                    }
+                    _logger.InfoFormat("read from clipboard: {0}", clipboardText);
+                    _logger.InfoFormat("alt read from clipboard: {0}", s);
+                }
+                catch (COMException e)
+                {
+                    _logger.Error("Caught exception from clipData.GetData");
+                    _logger.Error(e);
+                    return;
+                }
+
+                if (clipboardText.Equals(ActiveClipboardString, StringComparison.InvariantCultureIgnoreCase)) return;
+            }
+
+            else if (Clipboard.ContainsFileDropList())
+            {
+                // we have a file drop list in the clipboard
+                var fl = System.Windows.Clipboard.GetFileDropList();
+            }
+            else if (Clipboard.ContainsImage())
+            {
+                // Because of a known issue in WPF,
+                // we have to use a workaround to get correct
+                // image that can be displayed.
+                // The image have to be saved to a stream and then 
+                // read out to workaround the issue.
+                var ms = new MemoryStream();
+                var enc = new BmpBitmapEncoder();
+                enc.Frames.Add(BitmapFrame.Create(System.Windows.Clipboard.GetImage()));
+                enc.Save(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+
+                var dec = new BmpBitmapDecoder(ms,
+                    BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.Default);
+
+                //                Image img = new Image();
+                //                img.Stretch = Stretch.Uniform;
+                //                img.Source = dec.Frames[0];
+                //                pnlContent.Children.Add(img);
+            }
+        }
+
+        private void BringItemToTop(string clipboardText)
 	    {
 		    var matchedItem = _masterList.FirstOrDefault(x => x.Text.Equals(clipboardText, StringComparison.InvariantCultureIgnoreCase));
 		    if (matchedItem == null) return;
