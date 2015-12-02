@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
+using System.Windows;
 using DLab.Domain;
 using log4net;
 using log4net.Core;
@@ -20,23 +22,68 @@ namespace DLab.ViewModels
 	        _clipboardItem = clipboardItem;
 	    }
 
+	    public IDataObject GetClipboardData()
+	    {
+	        if (DataType == ClipboardDataType.Text)
+	        {
+	            return new DataObject(DataFormats.Text, Text);
+	        }
+
+	        if (DataType == ClipboardDataType.FileDrop)
+	        {
+	            return new DataObject(DataFormats.FileDrop, StringToCollection(Text));
+	        }
+
+	        return null;
+	    }
+
 	    private ClipboardItemViewModel(string text)
 		{
             _clipboardItem = new ClipboardItem {Text = text};
 		}
 
-        private ClipboardItemViewModel(StringCollection fileDropList)
-        {
-            this.fileDropList = fileDropList;
+	    private ClipboardItemViewModel(ICollection fileDropList)
+		{
+            _clipboardItem = new ClipboardItem
+            {
+                Text = CollectionToString(fileDropList),
+                DataType = ClipboardDataType.FileDrop
+            };
+		}
+
+	    private ICollection StringToCollection(string text)
+	    {
+	        var result = new StringCollection();
+	        var textParts = text.Split(new []{';'}, StringSplitOptions.RemoveEmptyEntries);
+            if (textParts.Length == 0) { return result; }
+
+	        result.AddRange(textParts);
+	        return result;
+	    }
+
+	    private string CollectionToString(ICollection collection)
+	    {
+	        if (collection.Count == 0) {return "";}
             var sb = new StringBuilder();
 
-            foreach (var file in fileDropList)
-            {
-                sb.Append($"{file};");
-            }
+	        foreach (var item in collection)
+	        {
+	            sb.Append($"{item};");
+	        }
+	        return sb.ToString().TrimEnd(';');
+	    }
 
-            _clipboardItem = new ClipboardItem {Text = sb.ToString().TrimEnd(';')};
-        }
+	    public static ClipboardItemViewModel ByText(string text)
+	    {
+	        var result = new ClipboardItemViewModel(text) {DataType = ClipboardDataType.Text};
+	        return result;
+	    }
+
+	    public static ClipboardItemViewModel ByFileDropList(StringCollection fileDropList)
+	    {
+	        var result = new ClipboardItemViewModel(fileDropList) {DataType = ClipboardDataType.FileDrop};
+	        return result;
+	    }
 
         public int Id
 	    {
@@ -66,6 +113,12 @@ namespace DLab.ViewModels
 	    {
 	        get { return _clipboardItem.Favourite; }
 	        set { _clipboardItem.Favourite = value; }
+	    }
+
+	    public ClipboardDataType DataType
+	    {
+	        get { return _clipboardItem.DataType; }
+	        set { _clipboardItem.DataType = value; }
 	    }
 
 	    public ClipboardDataType DataType

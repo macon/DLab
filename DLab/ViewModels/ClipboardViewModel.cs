@@ -47,7 +47,7 @@ namespace DLab.ViewModels
             var clipboardItems = LoadClipboardItems();
             _masterList.AddRange(clipboardItems);
 
-            SafeAddToClipboardHistory(Clipboard.GetText());
+            SafeAddToClipboardHistory(BuildViewModelFromClipboard());
             RebuildClipboardItems();
 
             HideStateMsg = true;
@@ -112,24 +112,20 @@ namespace DLab.ViewModels
 
 	    public BindableCollection<ClipboardItemViewModel> ClipboardItems { get; set; }
 
-        public int Order
-        {
-            get { return 1; }
-        }
+        public int Order => 1;
 
-        public void Handle(ClipboardChangedEvent message)
+	    public void Handle(ClipboardChangedEvent message)
         {
             if (!CanHandleClipboardData())
             {
-                _logger.Info("Clipboard does not contain text or file list");
+                _logger.Info("Cannot handle clipboard data type");
                 return;
             }
 
-//            var vm = MakeClipboardItem();
-            var clipboardText = SafeReadClipboardText();
-            if (string.IsNullOrWhiteSpace(clipboardText)) return;
+            var vm = BuildViewModelFromClipboard();
+            if (vm == null) return;
 
-            SafeAddToClipboardHistory(clipboardText);
+            SafeAddToClipboardHistory(vm);
             RebuildClipboardItems();
         }
 
@@ -164,13 +160,32 @@ namespace DLab.ViewModels
 //	    }
 
 
-	    public string SafeReadClipboardText()
-        {
-            IDataObject clipData;
+	    {
+	        var dataObj = Clipboard.GetDataObject();
+            if (dataObj == null) { return false;}
 
-            try
+	        return dataObj.GetDataPresent(DataFormats.Text) ||
+	               dataObj.GetDataPresent(DataFormats.StringFormat);
+	    }
+
+	    public ClipboardItemViewModel BuildViewModelFromClipboard()
+        {
+	        try
             {
-                clipData = Clipboard.GetDataObject();
+                var clipData = Clipboard.GetDataObject();
+                if (clipData == null) { return null;}
+
+                if (clipData.GetDataPresent(DataFormats.Text))
+                {
+                    var clipboardText = (string)clipData.GetData(DataFormats.Text, true);
+                    return ClipboardItemViewModel.ByText(clipboardText);
+                }
+
+                if (clipData.GetDataPresent(DataFormats.FileDrop))
+                {
+                    var clipboardText = (string)clipData.GetData(DataFormats.FileDrop, true);
+                    return ClipboardItemViewModel.ByText(clipboardText);
+                }
             }
             catch (COMException e)
             {
@@ -178,51 +193,44 @@ namespace DLab.ViewModels
                 _logger.Error(e);
                 return null;
             }
+            return null;
+        }
 
-            if (clipData == null || !clipData.GetDataPresent(DataFormats.Text))
+	    private void SafeAddToClipboardHistory(ClipboardItemViewModel viewModel)
+	    {
+            if (viewModel == null) return;
+
+            if (_masterList.Any(x => x.DataType == viewModel.DataType &&
+                                x.Text.Equals(viewModel.Text, StringComparison.InvariantCultureIgnoreCase)))
             {
-                _logger.Info("Could not read from CB");
-                return null;
+                BringItemToTop(viewModel.Text);
+                return;
             }
+            _masterList.Insert(0, viewModel);
+	    }
 
-            string clipboardText;
-            try
-            {
-                clipboardText = (string)clipData.GetData(DataFormats.Text, false);
-                _logger.InfoFormat("read from clipboard: {0}", clipboardText);
+	    public void SetClipboardBlind(ClipboardItemViewModel viewModel)
+        {
+            if (ClipboardAlreadySet(viewModel)) return;
+
+	        try
+	        {
+                ActiveClipboardString = viewModel.Text;
+                Clipboard.SetDataObject(viewModel.GetClipboardData());
             }
             catch (COMException e)
             {
-                _logger.Error("Caught exception from clipData.GetData");
                 _logger.Error(e);
-                return null;
             }
-            return clipboardText;
         }
 
-	    private void SafeAddToClipboardHistory(string text)
+	    private bool ClipboardAlreadySet(ClipboardItemViewModel viewModel)
 	    {
-            if (string.IsNullOrEmpty(text)) return;
+	        var clipboard = BuildViewModelFromClipboard();
 
-            if (_masterList.Any(x => x.Text.Equals(text, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                BringItemToTop(text);
-                return;
-            }
-            _masterList.Insert(0, ClipboardItemViewModel.MakeTextItem(text));
-
-            _logger.InfoFormat("Inserted '{0}' at top of _masterList", text);
+	        return clipboard.Text == viewModel.Text
+	               && clipboard.DataType == viewModel.DataType;
 	    }
-
-	    public void SetClipboardBlind(string text)
-        {
-            var s = Clipboard.ContainsText() ? Clipboard.GetText() : "";
-            if (Clipboard.ContainsText() && s.Equals(text, StringComparison.InvariantCultureIgnoreCase)) { return; }
-
-//            ShellView.ActiveClipboardString = text;
-            ActiveClipboardString = text;
-            Clipboard.SetText(text);
-        }
 
 	    public string ActiveClipboardString { get; private set; }
 
@@ -246,7 +254,7 @@ namespace DLab.ViewModels
 	    public void Paste()
         {
             Debug.WriteLine("clipboard text: {0}", new object[] {SelectedClipboardItem});
-            SetClipboardBlind(SelectedClipboardItem.Text);
+            SetClipboardBlind(SelectedClipboardItem);
 	        SelectedClipboardItem.PasteCount++;
 	        ReportPasteCounts();
 

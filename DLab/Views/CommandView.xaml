@@ -10,6 +10,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              behaviours:FocusBehavior.FocusFirst="true">
     <DockPanel Background="#2D2D30">
+        
         <DockPanel.Resources>
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
             <converters:ShortenPathConverter x:Key="Shortener"/>
@@ -34,7 +35,7 @@
                         <DockPanel cal:View.Model="{Binding}">
                             <Image Margin="2" DockPanel.Dock="Left" Source="{Binding Icon}"/>
                             <StackPanel ToolTip="{Binding Path=CommandModel.Target}">
-                                <TextBlock Text="{Binding Path=CommandModel.Command}" ></TextBlock>
+                                <TextBlock Text="{Binding Path=CommandModel.Command}" Foreground="BlanchedAlmond"></TextBlock>
                                 <TextBlock Text="{Binding Path=CommandModel.Target, Converter={StaticResource Shortener}}" Margin="10 0 0 0" Foreground="Black"></TextBlock>
                             </StackPanel>
                         </DockPanel>

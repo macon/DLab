@@ -40,6 +40,7 @@
 
 
         <ListBox Name="ClipboardItems" 
+            BorderThickness="0"
 		    TabIndex="0" 
             Margin="5 0 5 5"
             Background="#2D2D30"

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Mime;
 using ProtoBuf;
 
 namespace DLab.Domain
@@ -45,9 +46,9 @@ namespace DLab.Domain
 
     public enum ClipboardDataType
     {
-        Text = 0,
-        FileDropList=1,
+        Text=0,
+        FileDrop=1,
         Image=2,
-        Unknown=9
+        Unknown = 9
     }
 }
