@@ -121,12 +121,6 @@ namespace DLab.ViewModels
 	        set { _clipboardItem.DataType = value; }
 	    }
 
-	    public ClipboardDataType DataType
-	    {
-	        get { return _clipboardItem.DataType; }
-	        set { _clipboardItem.DataType = value; }
-	    }
-
 	    public string DisplayText
 		{
 			get
@@ -168,7 +162,7 @@ namespace DLab.ViewModels
 
 	    public static ClipboardItemViewModel MakeFileDropListItem(StringCollection fileDropList)
 	    {
-	        var result = new ClipboardItemViewModel(fileDropList) {DataType = ClipboardDataType.FileDropList};
+	        var result = new ClipboardItemViewModel(fileDropList) {DataType = ClipboardDataType.FileDrop};
 	        return result;
 	    }
 

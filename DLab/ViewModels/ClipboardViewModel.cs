@@ -136,38 +136,6 @@ namespace DLab.ViewModels
 	        return clipboardData != null && (clipboardData.GetDataPresent(DataFormats.Text) || clipboardData.GetDataPresent(DataFormats.StringFormat));
 	    }
 
-//	    private ClipboardItemViewModel MakeClipboardItem()
-//	    {
-//	        var dataObject = Clipboard.GetDataObject();
-//
-//	        switch (@enum)
-//	        {
-//	                
-//	        }
-//
-//
-//	        if (Clipboard.ContainsText())
-//	        {
-//	            return ClipboardItemViewModel.MakeTextItem(Clipboard.GetText());
-//            }
-//            
-//	        if (Clipboard.ContainsFileDropList())
-//	        {
-//	            return ClipboardItemViewModel.MakeFileDropListItem(Clipboard.GetFileDropList());
-//            }
-//
-//	        return null;
-//	    }
-
-
-	    {
-	        var dataObj = Clipboard.GetDataObject();
-            if (dataObj == null) { return false;}
-
-	        return dataObj.GetDataPresent(DataFormats.Text) ||
-	               dataObj.GetDataPresent(DataFormats.StringFormat);
-	    }
-
 	    public ClipboardItemViewModel BuildViewModelFromClipboard()
         {
 	        try
