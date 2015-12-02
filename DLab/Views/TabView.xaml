@@ -7,5 +7,9 @@
              d:DesignHeight="300" d:DesignWidth="300">
     <DockPanel>
         <TabControl Name="Items" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        
+        
     </DockPanel>
 </UserControl>
+
+    

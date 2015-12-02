@@ -119,12 +119,13 @@ namespace DLab.ViewModels
 
         public void Handle(ClipboardChangedEvent message)
         {
-            if (!Clipboard.ContainsText())
+            if (!CanHandleClipboardData())
             {
-                _logger.Info("Clipboard.ContainsText returned false");
+                _logger.Info("Clipboard does not contain text or file list");
                 return;
             }
 
+//            var vm = MakeClipboardItem();
             var clipboardText = SafeReadClipboardText();
             if (string.IsNullOrWhiteSpace(clipboardText)) return;
 
@@ -132,7 +133,38 @@ namespace DLab.ViewModels
             RebuildClipboardItems();
         }
 
-        public string SafeReadClipboardText()
+	    private bool CanHandleClipboardData()
+	    {
+	        var clipboardData = Clipboard.GetDataObject();
+
+	        return clipboardData != null && (clipboardData.GetDataPresent(DataFormats.Text) || clipboardData.GetDataPresent(DataFormats.StringFormat));
+	    }
+
+//	    private ClipboardItemViewModel MakeClipboardItem()
+//	    {
+//	        var dataObject = Clipboard.GetDataObject();
+//
+//	        switch (@enum)
+//	        {
+//	                
+//	        }
+//
+//
+//	        if (Clipboard.ContainsText())
+//	        {
+//	            return ClipboardItemViewModel.MakeTextItem(Clipboard.GetText());
+//            }
+//            
+//	        if (Clipboard.ContainsFileDropList())
+//	        {
+//	            return ClipboardItemViewModel.MakeFileDropListItem(Clipboard.GetFileDropList());
+//            }
+//
+//	        return null;
+//	    }
+
+
+	    public string SafeReadClipboardText()
         {
             IDataObject clipData;
 
@@ -168,7 +200,6 @@ namespace DLab.ViewModels
             return clipboardText;
         }
 
-
 	    private void SafeAddToClipboardHistory(string text)
 	    {
             if (string.IsNullOrEmpty(text)) return;
@@ -178,12 +209,9 @@ namespace DLab.ViewModels
                 BringItemToTop(text);
                 return;
             }
-            _masterList.Insert(0, new ClipboardItemViewModel(text));
+            _masterList.Insert(0, ClipboardItemViewModel.MakeTextItem(text));
+
             _logger.InfoFormat("Inserted '{0}' at top of _masterList", text);
-	        foreach (var model in _masterList)
-	        {
-                _logger.InfoFormat("\t\t{0}", model.Text);
-            }
 	    }
 
 	    public void SetClipboardBlind(string text)

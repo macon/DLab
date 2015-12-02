@@ -6,9 +6,10 @@
         xmlns:shell="clr-namespace:Microsoft.Windows.Shell;assembly=Microsoft.Windows.Shell"
         xmlns:converters="clr-namespace:DLab.Converters"
         Title="ShellView"
+        BorderBrush="#007ACC"
+        BorderThickness="1"
         Background="#2D2D30"
         Height="300" Width="600" ShowInTaskbar="False" >
-<!--    Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"-->
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome
@@ -18,7 +19,6 @@
             GlassFrameThickness="0">
         </shell:WindowChrome>
     </shell:WindowChrome.WindowChrome>
-<!--    CornerRadius="10,10,10,10"-->
 
     <Window.Resources>
         <ResourceDictionary>
@@ -56,6 +56,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        
         <!--provide the background for the entire form.  In practice, this appears as the window's resize border, because the title and window content obscure the rest-->
         <Border Grid.RowSpan="2" BorderThickness="3" BorderBrush="#2D2D30">
 <!--            <Border.Background>-->

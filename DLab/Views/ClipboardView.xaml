@@ -12,20 +12,21 @@
     <DockPanel>
         <DockPanel.Resources>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
-
+            
+            
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
 
             <DataTemplate x:Key="ClipboardItemTemplate">
-                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}" FontSize="12" Padding="0 0 0 0" ></Label>
+                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}" Foreground="BlanchedAlmond" FontSize="12" Padding="0 0 0 0" ></Label>
             </DataTemplate>
 
             <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
                 <Style.Triggers>
                     <Trigger Property="ItemsControl.AlternationIndex" Value="0">
-                        <Setter Property="Background" Value="#19f39611"></Setter>
+                        <Setter Property="Background" Value="#2D2D30"></Setter>
                     </Trigger>
                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                        <Setter Property="Background" Value="White"></Setter>
+                        <Setter Property="Background" Value="#4D4D53"></Setter>
                     </Trigger>
                 </Style.Triggers>
             </Style>
@@ -36,8 +37,9 @@
 <!--        <Label DockPanel.Dock="Bottom" Height="20" Visibility="{Binding HideStateMsg, Converter={StaticResource BoolToHiddenConverter}}">Loading</Label>-->
 
 		<Button Name="Paste" DockPanel.Dock="Bottom" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
-        
-		<ListBox Name="ClipboardItems" 
+
+
+        <ListBox Name="ClipboardItems" 
 		    TabIndex="0" 
             Margin="5 0 5 5"
             Background="#2D2D30"

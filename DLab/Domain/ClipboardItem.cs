@@ -38,5 +38,16 @@ namespace DLab.Domain
 
         [ProtoMember(5)]
         public bool Favourite { get; set; }
+
+        [ProtoMember(6)]
+        public ClipboardDataType DataType { get; set; }
+    }
+
+    public enum ClipboardDataType
+    {
+        Text = 0,
+        FileDropList=1,
+        Image=2,
+        Unknown=9
     }
 }

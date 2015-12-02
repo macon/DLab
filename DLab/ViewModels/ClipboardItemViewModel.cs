@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using DLab.Domain;
 using log4net;
 using log4net.Core;
@@ -9,18 +13,32 @@ namespace DLab.ViewModels
 	{
 	    private readonly ClipboardItem _clipboardItem;
 	    public const int LineLength = 200;
+        private StringCollection fileDropList;
 
-	    public ClipboardItemViewModel(ClipboardItem clipboardItem)
+        public ClipboardItemViewModel(ClipboardItem clipboardItem)
 	    {
 	        _clipboardItem = clipboardItem;
 	    }
 
-	    public ClipboardItemViewModel(string text)
+	    private ClipboardItemViewModel(string text)
 		{
             _clipboardItem = new ClipboardItem {Text = text};
 		}
 
-	    public int Id
+        private ClipboardItemViewModel(StringCollection fileDropList)
+        {
+            this.fileDropList = fileDropList;
+            var sb = new StringBuilder();
+
+            foreach (var file in fileDropList)
+            {
+                sb.Append($"{file};");
+            }
+
+            _clipboardItem = new ClipboardItem {Text = sb.ToString().TrimEnd(';')};
+        }
+
+        public int Id
 	    {
 	        get { return _clipboardItem.Id; }
 	        set { _clipboardItem.Id = value; }
@@ -48,6 +66,12 @@ namespace DLab.ViewModels
 	    {
 	        get { return _clipboardItem.Favourite; }
 	        set { _clipboardItem.Favourite = value; }
+	    }
+
+	    public ClipboardDataType DataType
+	    {
+	        get { return _clipboardItem.DataType; }
+	        set { _clipboardItem.DataType = value; }
 	    }
 
 	    public string DisplayText
@@ -81,6 +105,18 @@ namespace DLab.ViewModels
 	    public bool IsSaved
 	    {
 	        get { return _clipboardItem.Id != default(int); }
+	    }
+
+	    public static ClipboardItemViewModel MakeTextItem(string text)
+	    {
+	        var result = new ClipboardItemViewModel(text) {DataType = ClipboardDataType.Text};
+	        return result;
+	    }
+
+	    public static ClipboardItemViewModel MakeFileDropListItem(StringCollection fileDropList)
+	    {
+	        var result = new ClipboardItemViewModel(fileDropList) {DataType = ClipboardDataType.FileDropList};
+	        return result;
 	    }
 
 	    public ClipboardItem Instance { get { return _clipboardItem; } }

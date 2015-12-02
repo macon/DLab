@@ -10,3 +10,5 @@
         <TabControl Name="Items" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
     </DockPanel>
 </UserControl>
+
+    

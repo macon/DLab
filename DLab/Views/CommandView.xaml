@@ -15,6 +15,7 @@
             <converters:ShortenPathConverter x:Key="Shortener"/>
         </DockPanel.Resources>
         
+        
         <DockPanel>
             <DockPanel DockPanel.Dock="Top">
                 <Button Name="RunCommand" IsDefault="True" Height="25" DockPanel.Dock="Right" Template="{StaticResource BlankButton}"/>
