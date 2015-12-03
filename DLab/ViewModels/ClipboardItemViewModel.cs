@@ -2,9 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using DLab.Domain;
 using log4net;
 using log4net.Core;
@@ -31,8 +34,15 @@ namespace DLab.ViewModels
 
 	        if (DataType == ClipboardDataType.FileDrop)
 	        {
-	            return new DataObject(DataFormats.FileDrop, StringToCollection(Text));
-	        }
+                var result = new DataObject();
+                result.SetFileDropList(StringToCollection(Text));
+//	            var result = new DataObject(DataFormats.FileDrop, StringToArray(Text));
+
+                var strm = new System.IO.MemoryStream();
+                strm.WriteByte((byte)DragDropEffects.Copy);
+                result.SetData("Preferred Dropeffect", strm);
+                return result;
+            }
 
 	        return null;
 	    }
@@ -42,19 +52,29 @@ namespace DLab.ViewModels
             _clipboardItem = new ClipboardItem {Text = text};
 		}
 
-	    private ClipboardItemViewModel(ICollection fileDropList)
-		{
+	    private ClipboardItemViewModel(IEnumerable<string> fileDropList)
+	    {
+	        
             _clipboardItem = new ClipboardItem
             {
-                Text = CollectionToString(fileDropList),
+                Text = fileDropList.Aggregate((s1, s2) => $"{s1}\n{s2}"),
                 DataType = ClipboardDataType.FileDrop
             };
 		}
 
-	    private ICollection StringToCollection(string text)
+	    private string[] StringToArray(string text)
 	    {
-	        var result = new StringCollection();
 	        var textParts = text.Split(new []{';'}, StringSplitOptions.RemoveEmptyEntries);
+            if (textParts.Length == 0) { return new string[0]; }
+
+	        var result = textParts.ToArray();
+	        return result;
+	    }
+
+	    private StringCollection StringToCollection(string text)
+	    {
+            var result = new StringCollection();
+	        var textParts = text.Split(new []{'\n'}, StringSplitOptions.RemoveEmptyEntries);
             if (textParts.Length == 0) { return result; }
 
 	        result.AddRange(textParts);
@@ -79,7 +99,7 @@ namespace DLab.ViewModels
 	        return result;
 	    }
 
-	    public static ClipboardItemViewModel ByFileDropList(StringCollection fileDropList)
+	    public static ClipboardItemViewModel ByFileDropList(IEnumerable<string> fileDropList)
 	    {
 	        var result = new ClipboardItemViewModel(fileDropList) {DataType = ClipboardDataType.FileDrop};
 	        return result;
@@ -160,12 +180,41 @@ namespace DLab.ViewModels
 	        return result;
 	    }
 
-	    public static ClipboardItemViewModel MakeFileDropListItem(StringCollection fileDropList)
+//	    public static ClipboardItemViewModel MakeFileDropListItem(StringCollection fileDropList)
+//	    {
+//	        var result = new ClipboardItemViewModel(fileDropList) {DataType = ClipboardDataType.FileDrop};
+//	        return result;
+//	    }
+
+	    public ImageSource Icon
 	    {
-	        var result = new ClipboardItemViewModel(fileDropList) {DataType = ClipboardDataType.FileDrop};
-	        return result;
+	        get
+	        {
+                var uriSource3 = new Uri(@"pack://application:,,,/Dlab;component/Resources/text file1 (1).png");
+                var uriSource = new Uri(@"/DLab;component/Resources/text file1 (1).png", UriKind.Relative);
+                var uriSource2 = new Uri(@"pack://application:,,,/Dlab;component/Resources/documents7");
+                var result =DataType == ClipboardDataType.Text
+                    ? new BitmapImage() {UriSource = uriSource3}
+                    : new BitmapImage() { UriSource = uriSource2 };
+                result.Freeze();
+	            return result;
+	        }
 	    }
 
+	    public string ImageToolTip => DataType == ClipboardDataType.Text
+	        ? "Text"
+	        : "Files";
+
+	    public string ImagePath
+	    {
+	        get
+	        {
+                var result = DataType == ClipboardDataType.Text
+                    ? @"pack://application:,,,/Dlab;component/Resources/text file1 (1).png"
+                    : @"pack://application:,,,/Dlab;component/Resources/documents7.png";
+	            return result;
+	        }
+	    }
 	    public ClipboardItem Instance { get { return _clipboardItem; } }
 	}
 }

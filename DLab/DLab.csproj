@@ -297,6 +297,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Resource Include="Resources\documents7.png" />
+    <Resource Include="Resources\text file1 %281%29.png" />
+    <Resource Include="Resources\text file1.png" />
     <Resource Include="Resources\delete-26.png" />
     <Resource Include="Resources\plus2_math-26.png" />
     <Resource Include="Resources\settings2-26.png" />

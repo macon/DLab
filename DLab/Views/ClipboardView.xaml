@@ -13,14 +13,17 @@
         <DockPanel.Resources>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
             
-            
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
 
             <DataTemplate x:Key="ClipboardItemTemplate">
-                <Label cal:Bind.Model="{Binding}" Name="DisplayText" ToolTip="{Binding Text}" Foreground="BlanchedAlmond" FontSize="12" Padding="0 0 0 0" ></Label>
+                <DockPanel cal:Bind.Model="{Binding}">
+                    <Image Source="{Binding ImagePath}" DockPanel.Dock="Right" ToolTip="{Binding ImageToolTip}" ></Image>
+                    <Label Name="DisplayText" ToolTip="{Binding Text}" Foreground="BlanchedAlmond" FontSize="12" Padding="0 0 0 0" ></Label>
+                </DockPanel>
             </DataTemplate>
 
             <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
                 <Style.Triggers>
                     <Trigger Property="ItemsControl.AlternationIndex" Value="0">
                         <Setter Property="Background" Value="#2D2D30"></Setter>

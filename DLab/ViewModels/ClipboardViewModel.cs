@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -133,7 +134,10 @@ namespace DLab.ViewModels
 	    {
 	        var clipboardData = Clipboard.GetDataObject();
 
-	        return clipboardData != null && (clipboardData.GetDataPresent(DataFormats.Text) || clipboardData.GetDataPresent(DataFormats.StringFormat));
+	        return clipboardData != null && 
+                (clipboardData.GetDataPresent(DataFormats.Text) || 
+                clipboardData.GetDataPresent(DataFormats.StringFormat) ||
+                clipboardData.GetDataPresent(DataFormats.FileDrop));
 	    }
 
 	    public ClipboardItemViewModel BuildViewModelFromClipboard()
@@ -151,8 +155,9 @@ namespace DLab.ViewModels
 
                 if (clipData.GetDataPresent(DataFormats.FileDrop))
                 {
-                    var clipboardText = (string)clipData.GetData(DataFormats.FileDrop, true);
-                    return ClipboardItemViewModel.ByText(clipboardText);
+                    var testObj = clipData.GetData(DataFormats.FileDrop, true);
+                    var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
+                    return ClipboardItemViewModel.ByFileDropList(collection);
                 }
             }
             catch (COMException e)
