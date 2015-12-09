@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Caliburn.Micro;
 using DLab.Domain;
 using DLab.Events;
+using DLab.Repositories;
 using Ookii.Dialogs.Wpf;
 
 namespace DLab.ViewModels
@@ -30,7 +31,7 @@ namespace DLab.ViewModels
             Folders = new BindableCollection<FolderSpecViewModel>();
 
             InitialiseFolders();
-            CatalogFiles = _fileCommandsRepo.Files;
+            CatalogFiles = _fileCommandsRepo.Specs;
         }
 
         public FolderSpecViewModel SelectedFolder
@@ -175,7 +176,7 @@ namespace DLab.ViewModels
 
         public string FileCount
         {
-            get { return string.Format("File commands: {0}", _fileCommandsRepo.Files.Count); }
+            get { return string.Format("File commands: {0}", _fileCommandsRepo.Specs.Count); }
         }
 
         private bool Save()

@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Caliburn.Micro;
 using DLab.Domain;
+using DLab.Repositories;
 using DLab.ViewModels;
 using log4net.Config;
 using StructureMap;
@@ -18,13 +19,39 @@ using Console = DLab.Domain.Console;
 
 namespace DLab
 {
-    public class CaliburnMicroBootstrapper : BootstrapperBase
+    public class CaliburnLogger : Caliburn.Micro.ILog
+    {
+        private ILog _logger;
+
+        public CaliburnLogger(Type t)
+        {
+            _logger = LogManager.GetLogger(t);
+
+        }
+        public void Info(string format, params object[] args)
+        {
+            _logger.InfoFormat(format, args);
+        }
+
+        public void Warn(string format, params object[] args)
+        {
+            _logger.WarnFormat(format, args);
+        }
+
+        public void Error(Exception exception)
+        {
+            _logger.Error(exception);
+        }
+    }
+
+    public sealed class CaliburnMicroBootstrapper : BootstrapperBase
     {
         private IContainer _container;
 
         public CaliburnMicroBootstrapper()
         {
             StartRuntime();
+            Caliburn.Micro.LogManager.GetLog = t => new CaliburnLogger(t);
         }
 
         protected override void OnStartup(object sender, StartupEventArgs e)
@@ -46,9 +73,11 @@ namespace DLab
                 x.For<SettingsFolderViewModel>().Use<SettingsFolderViewModel>();
                 x.For<SettingsWebViewModel>().Use<SettingsWebViewModel>();
                 x.For<SettingsDirViewModel>().Use<SettingsDirViewModel>();
+                x.For<SettingsRunnerViewModel>().Use<SettingsRunnerViewModel>();
                 x.For<FileCommandsRepo>().Use<FileCommandsRepo>().Singleton();
                 x.For<FolderSpecRepo>().Use<FolderSpecRepo>().Singleton();
                 x.For<WebSpecRepo>().Use<WebSpecRepo>().Singleton();
+                x.For<RunnerSpecRepo>().Use<RunnerSpecRepo>().Singleton();
                 x.For<CommandResolver>().Use<CommandResolver>().Singleton();
                 x.For<ILog>().Use(ctx => LogManager.GetLogger("DLab"));
 
@@ -67,7 +96,7 @@ namespace DLab
             EnsureDefaultScanFolders();
             DisplayRootViewFor<ShellViewModel>();
 
-            Debug.WriteLine(_container.WhatDoIHave());
+//            Debug.WriteLine(_container.WhatDoIHave());
         }
 
         private void EnsureDefaultScanFolders()

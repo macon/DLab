@@ -1,27 +1,33 @@
 ﻿using Caliburn.Micro;
-using DLab.Domain;
 
 namespace DLab.ViewModels
 {
-    public class SettingsViewModel : Conductor<ISettingsViewModel>.Collection.OneActive
+    public sealed class SettingsViewModel : Conductor<ISettingsViewModel>.Collection.OneActive
     {
-        private readonly IViewModelFactory _viewModelFactory;
         private readonly SettingsDirViewModel _settingsDirViewModel;
         private readonly SettingsWebViewModel _settingsWebViewModel;
         private readonly SettingsFolderViewModel _settingsFolderViewModel;
+        private readonly SettingsRunnerViewModel _settingsRunnerViewModel;
 
         public SettingsViewModel(IViewModelFactory viewModelFactory)
         {
             DisplayName = "Settings";
-            _viewModelFactory = viewModelFactory;
-            _settingsFolderViewModel = _viewModelFactory.GetViewModel<SettingsFolderViewModel>();
-            _settingsWebViewModel = _viewModelFactory.GetViewModel<SettingsWebViewModel>();
-            _settingsDirViewModel = _viewModelFactory.GetViewModel<SettingsDirViewModel>();
+            var viewModelFactory1 = viewModelFactory;
+            _settingsFolderViewModel = viewModelFactory1.GetViewModel<SettingsFolderViewModel>();
+            _settingsWebViewModel = viewModelFactory1.GetViewModel<SettingsWebViewModel>();
+            _settingsDirViewModel = viewModelFactory1.GetViewModel<SettingsDirViewModel>();
+            _settingsRunnerViewModel = viewModelFactory1.GetViewModel<SettingsRunnerViewModel>();
         }
 
         protected override void OnActivate()
         {
-            Items.AddRange(new ISettingsViewModel[] { _settingsFolderViewModel, _settingsWebViewModel, _settingsDirViewModel });
+            Items.AddRange(new ISettingsViewModel[]
+            {
+                _settingsFolderViewModel,
+                _settingsWebViewModel,
+                _settingsDirViewModel,
+                _settingsRunnerViewModel
+            });
 
             base.OnActivate();
         }

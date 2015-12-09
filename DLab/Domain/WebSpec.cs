@@ -1,19 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Windows.Documents.DocumentStructures;
+﻿using System.Windows.Documents.DocumentStructures;
+using DLab.Repositories;
 using ProtoBuf;
 
 namespace DLab.Domain
 {
     [ProtoContract]
-    public class WebSpecs
+    public class WebSpecs : BaseCollection<WebSpec>
     {
-        [ProtoMember(1)]
-        public List<WebSpec> Specs { get; set; }
-
-        public WebSpecs()
-        {
-            Specs = new List<WebSpec>();
-        }
     }
 
     [ProtoContract]

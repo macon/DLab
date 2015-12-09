@@ -6,6 +6,7 @@ namespace DLab.Domain
     [ProtoInclude(100, typeof(CatalogEntry))]
     [ProtoInclude(101, typeof(WebSpec))]
     [ProtoInclude(102, typeof(Console))]
+    [ProtoInclude(103, typeof(RunnerSpec))]
     public class EntityBase : IWeightedCommand
     {
         public EntityBase()

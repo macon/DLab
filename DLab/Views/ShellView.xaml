@@ -73,14 +73,14 @@
             <!--Window Icon and Title-->
             <DockPanel Background="#2D2D30">
                 <Button Name="Settings" DockPanel.Dock="Right"  Style="{StaticResource TransparentStyle}" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                    <Image Margin="5 0 5 0" Source="\Resources/robot-26.png" Height="30">
+                    <Image Margin="5 0 5 0" Source="\Resources/vehicle83.png" Height="30">
                         <Image.Style>
                             <Style TargetType="{x:Type Image}">
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter Property="Effect">
                                             <Setter.Value>
-                                                <DropShadowEffect ShadowDepth="0" Color="Blue" Opacity="1" BlurRadius="20"/>
+                                                <DropShadowEffect ShadowDepth="0" Color="White" Opacity="1" BlurRadius="20"/>
                                             </Setter.Value>
                                         </Setter>
                                     </Trigger>
@@ -96,11 +96,12 @@
         <!--Content-->
         <Grid Grid.Row="1">
             <DockPanel>
+<!--                Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"-->
 
                 <infrastructure:NotifyIcon
 			        x:Name="notifyIcon"
 			        Text="Gadget"
-			        Icon="pack://application:,,,/Dlab;component/Resources/robot-26.png"
+			        Icon="pack://application:,,,/Dlab;component/Resources/vehicle83.png"
 			        BalloonTipText="Gadget"
 			        BalloonTipTitle="Gadget"
 			        BalloonTipIcon="Info"

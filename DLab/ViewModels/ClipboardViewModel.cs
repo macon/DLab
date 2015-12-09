@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using Caliburn.Micro;
 using DLab.Domain;
 using DLab.Infrastructure;
+using DLab.Repositories;
 using DLab.Views;
 using log4net;
 using ILog = log4net.ILog;
@@ -134,10 +135,16 @@ namespace DLab.ViewModels
 	    {
 	        var clipboardData = Clipboard.GetDataObject();
 
+	        if (Clipboard.ContainsImage())
+	        {
+	            var img = Clipboard.GetImage();
+	        }
+
 	        return clipboardData != null && 
                 (clipboardData.GetDataPresent(DataFormats.Text) || 
                 clipboardData.GetDataPresent(DataFormats.StringFormat) ||
-                clipboardData.GetDataPresent(DataFormats.FileDrop));
+                clipboardData.GetDataPresent(DataFormats.FileDrop) ||
+                Clipboard.ContainsImage());
 	    }
 
 	    public ClipboardItemViewModel BuildViewModelFromClipboard()
@@ -155,9 +162,14 @@ namespace DLab.ViewModels
 
                 if (clipData.GetDataPresent(DataFormats.FileDrop))
                 {
-                    var testObj = clipData.GetData(DataFormats.FileDrop, true);
                     var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
                     return ClipboardItemViewModel.ByFileDropList(collection);
+                }
+
+                if (Clipboard.ContainsImage())
+                {
+                    var bmi = Clipboard.GetImage();
+                    return ClipboardItemViewModel.ByImage(bmi);
                 }
             }
             catch (COMException e)

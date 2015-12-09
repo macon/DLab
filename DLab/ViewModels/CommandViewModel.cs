@@ -16,7 +16,7 @@ using ILog = log4net.ILog;
 
 namespace DLab.ViewModels
 {
-    public class CommandViewModel : Screen, ITabViewModel
+    public sealed class CommandViewModel : Screen, ITabViewModel
     {
         private readonly IEventAggregator _eventAggregator;
         private readonly IAppServices _appServices;
@@ -73,8 +73,6 @@ namespace DLab.ViewModels
                 MatchedItems.AddRange(r);
                 SelectedMatchedItem = MatchedItems.First();
                 EnhanceWithIconAsync();
-
-//                _appServices.WindowManager.ShowWindow(this, "List");
             }
         }
 
@@ -161,11 +159,15 @@ namespace DLab.ViewModels
 
             if (SelectedMatchedItem.CommandModel is WebSpec)
             {
-                _commandResolver.Save(SelectedMatchedItem.CommandModel as WebSpec);
+                _commandResolver.Save((WebSpec)SelectedMatchedItem.CommandModel);
+            }
+            else if (SelectedMatchedItem.CommandModel is CatalogEntry)
+            {
+                _commandResolver.Save((CatalogEntry)SelectedMatchedItem.CommandModel);
             }
             else
             {
-                _commandResolver.Save(SelectedMatchedItem.CommandModel as CatalogEntry);
+                _commandResolver.Save(SelectedMatchedItem.CommandModel as RunnerSpec);
             }
             _commandResolver.Flush();
 

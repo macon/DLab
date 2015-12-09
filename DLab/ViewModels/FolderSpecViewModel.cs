@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Caliburn.Micro;
 using DLab.Domain;
+using DLab.Repositories;
 
 namespace DLab.ViewModels
 {

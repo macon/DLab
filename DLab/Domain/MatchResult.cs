@@ -14,12 +14,14 @@ namespace DLab.Domain
         {
             CommandModel = commandModel;
             Icon = new BitmapImage(new Uri("pack://application:,,,/Resources/App.ico"));
+            Priority = commandModel.Priority;
         }
 
         public MatchResult()
         {
         }
 
+        public int Priority { get; set; }
         public CommandType CommandType { get; set; }
         public EntityBase CommandModel { get; private set; }
 //        public string Icon { get { return @"D:\dev\Scratch\DLab\DLab\Resources\App.ico"; } }

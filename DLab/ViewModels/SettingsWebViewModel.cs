@@ -1,19 +1,19 @@
 using System.Linq;
+using System.Windows;
 using Caliburn.Micro;
 using DLab.Domain;
+using DLab.Repositories;
 
 namespace DLab.ViewModels
 {
-    public class SettingsWebViewModel : Screen, ISettingsViewModel
+    public sealed class SettingsWebViewModel : Screen, ISettingsViewModel
     {
         private readonly WebSpecRepo _webSpecRepo;
-//        private readonly ICatalog _catalog;
         private WebSpecViewModel _selectedWebSpec;
 
         public SettingsWebViewModel(WebSpecRepo webSpecRepo)
         {
             _webSpecRepo = webSpecRepo;
-//            _catalog = catalog;
             DisplayName = "Web";
             WebSpecs = new BindableCollection<WebSpecViewModel>();
             InitialiseWebSpecs();
@@ -22,7 +22,6 @@ namespace DLab.ViewModels
         private void InitialiseWebSpecs()
         {
             WebSpecs.Clear();
-//            var specs = _catalog.WebSpecs();
             var specs = _webSpecRepo.Specs;
             WebSpecs.AddRange(specs.Select(x => new WebSpecViewModel(x)));
         }
@@ -33,25 +32,18 @@ namespace DLab.ViewModels
             WebSpecs.Add(webSpecVieWModel);
         }
 
-        public bool CanRemove
-        {
-            get { return SelectedWebSpec != null; }
-        }
+        public bool CanRemove => SelectedWebSpec != null;
 
         public void Remove()
         {
             if (SelectedWebSpec == null) return;
             var entity = SelectedWebSpec.Instance;
-//            _catalog.Remove(entity);
-//            _catalog.Flush();
             _webSpecRepo.Delete(SelectedWebSpec.Instance);
             WebSpecs.Remove(SelectedWebSpec);
         }
 
         public void Clear()
         {
-//            _catalog.Clear<WebSpec>();
-//            _catalog.Flush();
             _webSpecRepo.Clear();
             InitialiseWebSpecs();
         }
@@ -61,12 +53,11 @@ namespace DLab.ViewModels
             foreach (var viewModel in WebSpecs.Where(x => x.Unsaved || x.IsDirty))
             {
                 if (viewModel.Unsaved) { viewModel.Instance.SetId(); }
-//                _catalog.Save(viewModel.Instance);
                 _webSpecRepo.Save(viewModel.Instance);
                 viewModel.IsDirty = false;
             }
-//            _catalog.Flush();
             _webSpecRepo.Flush();
+            MessageBox.Show($"Saved {_webSpecRepo.Specs.Count}");
             TryClose();
         }
 
@@ -79,7 +70,7 @@ namespace DLab.ViewModels
             {
                 _selectedWebSpec = value;
                 NotifyOfPropertyChange();
-                NotifyOfPropertyChange("CanRemove");
+                NotifyOfPropertyChange(nameof(CanRemove));
             }
         }
     }

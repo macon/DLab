@@ -9,16 +9,30 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              behaviours:FocusBehavior.FocusFirst="true">
+    
     <DockPanel>
         <DockPanel.Resources>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
             
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
 
-            <DataTemplate x:Key="ClipboardItemTemplate">
-                <DockPanel cal:Bind.Model="{Binding}">
-                    <Image Source="{Binding ImagePath}" DockPanel.Dock="Right" ToolTip="{Binding ImageToolTip}" ></Image>
-                    <Label Name="DisplayText" ToolTip="{Binding Text}" Foreground="BlanchedAlmond" FontSize="12" Padding="0 0 0 0" ></Label>
+            <DataTemplate x:Key="ClipboardItemTextTemplate">
+                <DockPanel cal:View.Model="{Binding}">
+                    <Image Source="{Binding ImagePath}" DockPanel.Dock="Right" ToolTip="Text" ></Image>
+                    <Label Content="{Binding DisplayText}" ToolTip="{Binding Text}" Foreground="BlanchedAlmond" FontSize="12" Padding="0 0 0 0" ></Label>
+                </DockPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ClipboardItemFileTemplate">
+                <DockPanel cal:View.Model="{Binding}">
+                    <Image Source="{Binding ImagePath}" DockPanel.Dock="Right" ToolTip="Files" ></Image>
+                    <Label Content="{Binding DisplayText}" ToolTip="{Binding Text}" Foreground="BlanchedAlmond" FontSize="12" Padding="0 0 0 0" ></Label>
+                </DockPanel>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ClipboardItemImageTemplate">
+                <DockPanel cal:View.Model="{Binding}" HorizontalAlignment="Left">
+                    <Image Source="{Binding ClipboardImage}" />
                 </DockPanel>
             </DataTemplate>
 
@@ -26,13 +40,14 @@
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
                 <Style.Triggers>
                     <Trigger Property="ItemsControl.AlternationIndex" Value="0">
-                        <Setter Property="Background" Value="#2D2D30"></Setter>
+                        <Setter Property="Background" Value="Black"></Setter>
                     </Trigger>
                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">
                         <Setter Property="Background" Value="#4D4D53"></Setter>
                     </Trigger>
                 </Style.Triggers>
             </Style>
+
         </DockPanel.Resources>
 
         <TextBox Name="SearchText" DockPanel.Dock="Top" Height="20" HorizontalAlignment="Stretch" PreviewKeyUp="SearchText_OnPreviewKeyUp" Margin="5 0 5 0"></TextBox>
@@ -41,16 +56,42 @@
 
 		<Button Name="Paste" DockPanel.Dock="Bottom" Content="Paste" IsDefault="True" Template="{StaticResource BlankButton}"/>
 
-
-        <ListBox Name="ClipboardItems" 
+<!--        ItemsSource="{Binding ClipboardItems}"-->
+        <ListBox Name="ClipboardItems"  
             BorderThickness="0"
 		    TabIndex="0" 
             Margin="5 0 5 5"
-            Background="#2D2D30"
-            ItemTemplate="{StaticResource ClipboardItemTemplate}" 
+            Background="Black"
             PreviewTextInput="ClipboardItems_OnPreviewTextInput"
             MouseDoubleClick="ClipboardItems_OnMouseDoubleClick"
 		    AlternationCount="2">
+
+            
+<!--            ItemContainerStyle="{StaticResource Bob}"-->
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <ContentControl Content="{Binding}">
+                        <ContentControl.Style>
+                            <Style TargetType="{x:Type ContentControl}">
+                                
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ClipboardDataType}" Value="Text">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource ClipboardItemTextTemplate}"></Setter>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding ClipboardDataType}" Value="FileDrop">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource ClipboardItemFileTemplate}"></Setter>
+                                    </DataTrigger>
+
+                                    <DataTrigger Binding="{Binding ClipboardDataType}" Value="Image">
+                                        <Setter Property="ContentTemplate" Value="{StaticResource ClipboardItemImageTemplate}"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                    </ContentControl>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
         </ListBox>
     </DockPanel>
 </UserControl>

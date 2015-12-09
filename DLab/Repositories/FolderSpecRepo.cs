@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DLab.Domain;
 using ProtoBuf;
 
-namespace DLab.Domain
+namespace DLab.Repositories
 {
     public class FolderSpecRepo
     {

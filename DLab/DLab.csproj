@@ -42,6 +42,10 @@
     <Reference Include="Caliburn.Micro">
       <HintPath>..\packages\Caliburn.Micro.Core.2.0.1\lib\net45\Caliburn.Micro.dll</HintPath>
     </Reference>
+    <Reference Include="Caliburn.Micro.Logging, Version=2.0.3.0, Culture=neutral, PublicKeyToken=b352957eadd947b7, processorArchitecture=MSIL">
+      <HintPath>..\packages\Caliburn.Micro.Logging.2.0.3.0\lib\portable-net45+win+wpa81+wp80\Caliburn.Micro.Logging.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Caliburn.Micro.Platform">
       <HintPath>..\packages\Caliburn.Micro.2.0.1\lib\net45\Caliburn.Micro.Platform.dll</HintPath>
     </Reference>
@@ -110,18 +114,23 @@
     <Compile Include="Behaviours\AccessKeyScoper.cs" />
     <Compile Include="Behaviours\Attached.cs" />
     <Compile Include="Behaviours\FocusBehaviour.cs" />
+    <Compile Include="Caliburn\Micro\Logging\DebugLogger.cs" />
     <Compile Include="Converters\ShortenPathConverter.cs" />
+    <Compile Include="Repositories\BaseCollection.cs" />
+    <Compile Include="Repositories\BaseRepo.cs" />
     <Compile Include="Domain\ClipboardItem.cs" />
-    <Compile Include="Domain\ClipboardRepo.cs" />
+    <Compile Include="Repositories\ClipboardRepo.cs" />
     <Compile Include="Domain\CommandResolver.cs" />
     <Compile Include="Domain\CommandType.cs" />
     <Compile Include="Domain\Console.cs" />
     <Compile Include="Domain\EntityBase.cs" />
-    <Compile Include="Domain\FileCommandsRepo.cs" />
-    <Compile Include="Domain\FolderSpecRepo.cs" />
+    <Compile Include="Repositories\FileCommandsRepo.cs" />
+    <Compile Include="Repositories\FolderSpecRepo.cs" />
     <Compile Include="Domain\MatchResult.cs" />
+    <Compile Include="Domain\RunnerSpec.cs" />
+    <Compile Include="Repositories\RunnerSpecRepo.cs" />
     <Compile Include="Domain\WebSpec.cs" />
-    <Compile Include="Domain\WebSpecRepo.cs" />
+    <Compile Include="Repositories\WebSpecRepo.cs" />
     <Compile Include="Events\SystemStatusChangeEvent.cs" />
     <Compile Include="HyperJump\Scanner.cs" />
     <Compile Include="Infrastructure\DefaultSystemBrowser.cs" />
@@ -149,8 +158,10 @@
     <Compile Include="Domain\Note.cs" />
     <Compile Include="ViewModels\NotesViewModel.cs" />
     <Compile Include="ViewModels\NoteViewModel.cs" />
+    <Compile Include="ViewModels\RunnerSpecViewModel.cs" />
     <Compile Include="ViewModels\SettingsDirViewModel.cs" />
     <Compile Include="ViewModels\SettingsFolderViewModel.cs" />
+    <Compile Include="ViewModels\SettingsRunnerViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\SettingsWebViewModel.cs" />
     <Compile Include="ViewModels\ShellViewModel.cs" />
@@ -194,6 +205,9 @@
     </Compile>
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsRunnerView.xaml.cs">
+      <DependentUpon>SettingsRunnerView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SettingsWebView.xaml.cs">
       <DependentUpon>SettingsWebView.xaml</DependentUpon>
@@ -270,6 +284,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\SettingsRunnerView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\SettingsWebView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -297,6 +315,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Resource Include="Resources\vehicle83.png" />
     <Resource Include="Resources\documents7.png" />
     <Resource Include="Resources\text file1 %281%29.png" />
     <Resource Include="Resources\text file1.png" />
