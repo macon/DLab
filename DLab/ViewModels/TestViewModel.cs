@@ -128,9 +128,16 @@ namespace DLab.ViewModels
                 return;
             }
 
-            var parts = userCommand.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = userCommand.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
 
-            var masterList = parts.Select((x, i) => GetHighestFolderMatches(x, i == 0)).ToList();
+            if (parts.Length ==0) { return; }
+
+            var masterList = parts
+                                .Where(x => x.Length > 1)
+                                .Select((x, i) => GetHighestFolderMatches(x, i == 0))
+                                .ToList();
+
+            if (!masterList.Any()) { return; }
 
             var drivingSet = masterList.Last();
             var survivors = new List<FolderMatch>();
@@ -148,8 +155,6 @@ namespace DLab.ViewModels
                 }
                 if (!orphaned) { survivors.Add(folder); }
             }
-
-            //            var matchedFolders = survivors.Select(f => new FolderMatch { MatchedFolder = f });
 
             Items.Clear();
             foreach (var item in survivors.OrderBy(f => f.MatchedFolder.Level).ThenBy(f => f.Position).Take(200))

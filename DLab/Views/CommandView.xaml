@@ -9,11 +9,23 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
              behaviours:FocusBehavior.FocusFirst="False">
-    <DockPanel Background="#2D2D30">
+    <DockPanel Background="#2D2D30" Width="Auto">
         
         <DockPanel.Resources>
             <ControlTemplate x:Key="BlankButton" TargetType="{x:Type Button}" />
             <converters:ShortenPathConverter x:Key="Shortener"/>
+
+            <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                <Style.Triggers>
+                    <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                        <Setter Property="Background" Value="#2D2D30"></Setter>
+                    </Trigger>
+                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                        <Setter Property="Background" Value="#4D4D53"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
         </DockPanel.Resources>
         
         
@@ -22,10 +34,26 @@
                 <Button Name="RunCommand" IsDefault="True" Height="25" DockPanel.Dock="Right" Template="{StaticResource BlankButton}"/>
 
                 <TextBox Name="UserCommand" 
+                         Background="#2D2D30"
+                         Foreground="BlanchedAlmond"
                          Margin="5 0 5 0"
                          Text="{Binding UserCommand, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
                          PreviewKeyUp="UserCommand_OnPreviewKeyUp"
-                         TabIndex="0" Height="25"/>
+                         TabIndex="0" Height="25">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="BorderBrush" Value="DarkSlateGray"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsFocused" Value="True">
+                                        <Setter Property="BorderBrush" Value="#007ACC" />
+                                    </Trigger>
+                                    <Trigger Property="IsMouseDirectlyOver" Value="True">
+                                        <Setter Property="BorderBrush" Value="#007ACC" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                </TextBox>
             </DockPanel>
 
             <ListBox Name="MatchedItems" VerticalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Hidden" TabIndex="1" Margin="5 0 5 5"

@@ -67,19 +67,34 @@
                     Visibility="{Binding Path=Scanning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             
             <TextBox 
+                Name="UserCommand"
                 BorderBrush="#007ACC"
                 Foreground="BlanchedAlmond"
                 Margin="3 3 3 0"
                 Background="#2D2D30"
-                Name="UserCommand" 
                 FontSize="18" 
                 PreviewKeyUp="UserCommand_OnPreviewKeyUp" 
                 Visibility="{Binding Scanning, Converter={StaticResource BooleanToCollapsed}}"
                 HorizontalAlignment="Stretch" 
+                Width="Auto"
                 Text="{Binding UserCommand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                 IsEnabled="{Binding Scanning, Converter={StaticResource FlipBoolean}}"
                 HorizontalContentAlignment="Stretch"
-                DockPanel.Dock="Left"/>
+                DockPanel.Dock="Left">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="BorderBrush" Value="DarkSlateGray"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#007ACC" />
+                            </Trigger>
+                            <Trigger Property="IsMouseDirectlyOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#007ACC" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
 
 <!--            <Button Name="Rescan" Content="Refresh" DockPanel.Dock="Left"/>-->
 <!--            <CheckBox Name="DriveC" DockPanel.Dock="Left" VerticalAlignment="Center"/>-->

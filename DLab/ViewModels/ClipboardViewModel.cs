@@ -121,7 +121,7 @@ namespace DLab.ViewModels
         {
 	        try
 	        {
-	            if (!CanHandleClipboardData())
+                if (!CanHandleClipboardData())
 	            {
 	                var clipboardData = Clipboard.GetDataObject();
 	                var formats = string.Join(",", clipboardData.GetFormats());
@@ -161,27 +161,40 @@ namespace DLab.ViewModels
 
 	    public ClipboardItemViewModel BuildViewModelFromClipboard()
         {
-            var clipData = Clipboard.GetDataObject();
-            if (clipData == null) { return null;}
+	        try
+	        {
+	            var clipData = Clipboard.GetDataObject();
+	            if (clipData == null) { return null;}
 
-            if (clipData.GetDataPresent(DataFormats.Text))
-            {
-                var clipboardText = (string)clipData.GetData(DataFormats.Text, true);
-                return ClipboardItemViewModel.ByText(clipboardText);
-            }
+	            if (clipData.GetDataPresent(DataFormats.Text))
+	            {
+	                var clipboardText = (string)clipData.GetData(DataFormats.Text, true);
+	                return ClipboardItemViewModel.ByText(clipboardText);
+	            }
 
-            if (clipData.GetDataPresent(DataFormats.FileDrop))
-            {
-                var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
-                return ClipboardItemViewModel.ByFileDropList(collection);
-            }
+	            if (clipData.GetDataPresent(DataFormats.FileDrop))
+	            {
+	                var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
+	                return ClipboardItemViewModel.ByFileDropList(collection);
+	            }
 
-            if (Clipboard.ContainsImage())
-            {
-                var bmi = Clipboard.GetImage();
-                return ClipboardItemViewModel.ByImage(bmi);
-            }
-            return null;
+	            if (Clipboard.ContainsImage())
+	            {
+	                var bmi = Clipboard.GetImage();
+	                return ClipboardItemViewModel.ByImage(bmi);
+	            }
+	            return null;
+	        }
+	        catch (COMException)
+	        {
+	            var formats = Clipboard.GetDataObject().GetFormats();
+                _logger.Debug($"Caught {nameof(COMException)}, dumping formats on clipboard...");
+	            foreach (var format in formats)
+	            {
+	                _logger.Debug($"{format}");
+	            }
+	            throw;
+	        }
         }
 
 	    private void SafeAddToClipboardHistory(ClipboardItemViewModel viewModel)

@@ -68,13 +68,14 @@ namespace DLab.HyperJump
             _log.Debug($"{FolderLookup.Count} lookup keys");
 
             var items = FolderLookup.Where(l => l.Key.IndexOf("te", StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+
             _log.Debug($"found {items.Count} matching 'te'");
 
 //            var items = FolderLookup.Where(l => l.Key == "templates").ToList();
-            foreach (var item in items.SelectMany(l => l))
-            {
-                _log.Debug(item.FullPath);
-            }
+//            foreach (var item in items.SelectMany(l => l))
+//            {
+//                _log.Debug(item.FullPath);
+//            }
         }
 
         private IEnumerable<Folder> ScanEx2(DirectoryInfo startingDi)
