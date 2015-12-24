@@ -51,7 +51,7 @@ namespace DLab
         public CaliburnMicroBootstrapper()
         {
             StartRuntime();
-            Caliburn.Micro.LogManager.GetLog = t => new CaliburnLogger(t);
+//            Caliburn.Micro.LogManager.GetLog = t => new CaliburnLogger(t);
         }
 
         protected override void OnStartup(object sender, StartupEventArgs e)
@@ -67,17 +67,21 @@ namespace DLab
                 x.For<IEventAggregator>().Singleton().Use<EventAggregator>();
                 x.For<IViewModelFactory>().Use<ViewModelFactory>();
                 x.For<SettingsViewModel>().Use<SettingsViewModel>();
-                x.For<CommandViewModel>().Use<CommandViewModel>();
+                x.For<CommandViewModel>().Use<CommandViewModel>().Singleton();
                 x.For<TabViewModel>().Use<TabViewModel>();
-                x.For<ClipboardViewModel>().Use<ClipboardViewModel>();
+                x.For<ClipboardViewModel>().Use<ClipboardViewModel>().Singleton();
+                x.For<HyperspaceViewModel>().Use<HyperspaceViewModel>().Singleton();
+                x.For<TestViewModel>().Use<TestViewModel>().Singleton();
                 x.For<SettingsFolderViewModel>().Use<SettingsFolderViewModel>();
                 x.For<SettingsWebViewModel>().Use<SettingsWebViewModel>();
                 x.For<SettingsDirViewModel>().Use<SettingsDirViewModel>();
                 x.For<SettingsRunnerViewModel>().Use<SettingsRunnerViewModel>();
+                x.For<SettingsHyperViewModel>().Use<SettingsHyperViewModel>();
                 x.For<FileCommandsRepo>().Use<FileCommandsRepo>().Singleton();
                 x.For<FolderSpecRepo>().Use<FolderSpecRepo>().Singleton();
                 x.For<WebSpecRepo>().Use<WebSpecRepo>().Singleton();
                 x.For<RunnerSpecRepo>().Use<RunnerSpecRepo>().Singleton();
+                x.For<HyperjumpRepo>().Use<HyperjumpRepo>().Singleton();
                 x.For<CommandResolver>().Use<CommandResolver>().Singleton();
                 x.For<ILog>().Use(ctx => LogManager.GetLogger("DLab"));
 

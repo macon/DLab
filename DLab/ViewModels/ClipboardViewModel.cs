@@ -15,6 +15,7 @@ using DLab.Infrastructure;
 using DLab.Repositories;
 using DLab.Views;
 using log4net;
+using Console = System.Console;
 using ILog = log4net.ILog;
 using LogManager = log4net.LogManager;
 
@@ -118,17 +119,28 @@ namespace DLab.ViewModels
 
 	    public void Handle(ClipboardChangedEvent message)
         {
-            if (!CanHandleClipboardData())
-            {
-                _logger.Info("Cannot handle clipboard data type");
-                return;
+	        try
+	        {
+	            if (!CanHandleClipboardData())
+	            {
+	                var clipboardData = Clipboard.GetDataObject();
+	                var formats = string.Join(",", clipboardData.GetFormats());
+	                _logger.Info($"Cannot handle clipboard data type: {formats}");
+	                return;
+	            }
+
+	            var vm = BuildViewModelFromClipboard();
+	            if (vm == null) return;
+
+	            SafeAddToClipboardHistory(vm);
+	            RebuildClipboardItems();
+	        }
+	        catch (COMException exception)
+	        {
+                _logger.WarnFormat("Caught following exception within Handle(ClipboardChangedEvent message) operation...");
+                _logger.Error(exception);
+                HandleClipboardException();
             }
-
-            var vm = BuildViewModelFromClipboard();
-            if (vm == null) return;
-
-            SafeAddToClipboardHistory(vm);
-            RebuildClipboardItems();
         }
 
 	    private bool CanHandleClipboardData()
@@ -149,34 +161,25 @@ namespace DLab.ViewModels
 
 	    public ClipboardItemViewModel BuildViewModelFromClipboard()
         {
-	        try
+            var clipData = Clipboard.GetDataObject();
+            if (clipData == null) { return null;}
+
+            if (clipData.GetDataPresent(DataFormats.Text))
             {
-                var clipData = Clipboard.GetDataObject();
-                if (clipData == null) { return null;}
-
-                if (clipData.GetDataPresent(DataFormats.Text))
-                {
-                    var clipboardText = (string)clipData.GetData(DataFormats.Text, true);
-                    return ClipboardItemViewModel.ByText(clipboardText);
-                }
-
-                if (clipData.GetDataPresent(DataFormats.FileDrop))
-                {
-                    var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
-                    return ClipboardItemViewModel.ByFileDropList(collection);
-                }
-
-                if (Clipboard.ContainsImage())
-                {
-                    var bmi = Clipboard.GetImage();
-                    return ClipboardItemViewModel.ByImage(bmi);
-                }
+                var clipboardText = (string)clipData.GetData(DataFormats.Text, true);
+                return ClipboardItemViewModel.ByText(clipboardText);
             }
-            catch (COMException e)
+
+            if (clipData.GetDataPresent(DataFormats.FileDrop))
             {
-                _logger.WarnFormat("Caught following exception from Clipboard.GetDataObject...");
-                _logger.Error(e);
-                return null;
+                var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
+                return ClipboardItemViewModel.ByFileDropList(collection);
+            }
+
+            if (Clipboard.ContainsImage())
+            {
+                var bmi = Clipboard.GetImage();
+                return ClipboardItemViewModel.ByImage(bmi);
             }
             return null;
         }
@@ -238,18 +241,32 @@ namespace DLab.ViewModels
 
 	    public void Paste()
         {
-            Debug.WriteLine("clipboard text: {0}", new object[] {SelectedClipboardItem});
-            SetClipboardBlind(SelectedClipboardItem);
-	        SelectedClipboardItem.PasteCount++;
-	        ReportPasteCounts();
+	        try
+	        {
+	            Debug.WriteLine("clipboard text: {0}", new object[] {SelectedClipboardItem});
+	            SetClipboardBlind(SelectedClipboardItem);
+	            SelectedClipboardItem.PasteCount++;
+	            ReportPasteCounts();
 
-            var title = Win32.GetWindowTitle(ShellView.ClientHwnd);
-            Debug.WriteLine("target window title: {0}", new object[] { title });
+	            var title = Win32.GetWindowTitle(ShellView.ClientHwnd);
+	            Debug.WriteLine("target window title: {0}", new object[] { title });
 
-            Win32.SendPasteToClient(ShellView.ClientHwnd);
-			BringItemToTop(SelectedClipboardItem.Text);
-            _eventAggregator.Publish(new UserActionEvent(), Execute.OnUIThread);
+	            Win32.SendPasteToClient(ShellView.ClientHwnd);
+	            BringItemToTop(SelectedClipboardItem.Text);
+	            _eventAggregator.Publish(new UserActionEvent(), Execute.OnUIThread);
+	        }
+	        catch (COMException exception)
+	        {
+                _logger.WarnFormat("Caught following exception within Paste operation...");
+                _logger.Error(exception);
+                HandleClipboardException();
+	        }
         }
+
+	    private static void HandleClipboardException()
+	    {
+	        MessageBox.Show("Failed to perform Clipboard operation");
+	    }
 
 	    private void ReportPasteCounts()
 	    {

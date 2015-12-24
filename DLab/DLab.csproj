@@ -39,15 +39,17 @@
     <ApplicationIcon>Resources\robot-48.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Caliburn.Micro">
+    <Reference Include="Caliburn.Micro, Version=2.0.1.0, Culture=neutral, PublicKeyToken=8e5891231f2ed21f, processorArchitecture=MSIL">
       <HintPath>..\packages\Caliburn.Micro.Core.2.0.1\lib\net45\Caliburn.Micro.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Caliburn.Micro.Logging, Version=2.0.3.0, Culture=neutral, PublicKeyToken=b352957eadd947b7, processorArchitecture=MSIL">
       <HintPath>..\packages\Caliburn.Micro.Logging.2.0.3.0\lib\portable-net45+win+wpa81+wp80\Caliburn.Micro.Logging.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Caliburn.Micro.Platform">
+    <Reference Include="Caliburn.Micro.Platform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=8e5891231f2ed21f, processorArchitecture=MSIL">
       <HintPath>..\packages\Caliburn.Micro.2.0.1\lib\net45\Caliburn.Micro.Platform.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
@@ -90,6 +92,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Caliburn.Micro.2.0.1\lib\net45\System.Windows.Interactivity.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -116,6 +119,7 @@
     <Compile Include="Behaviours\FocusBehaviour.cs" />
     <Compile Include="Caliburn\Micro\Logging\DebugLogger.cs" />
     <Compile Include="Converters\ShortenPathConverter.cs" />
+    <Compile Include="Domain\HyperjumpSpec.cs" />
     <Compile Include="Repositories\BaseCollection.cs" />
     <Compile Include="Repositories\BaseRepo.cs" />
     <Compile Include="Domain\ClipboardItem.cs" />
@@ -161,6 +165,7 @@
     <Compile Include="ViewModels\RunnerSpecViewModel.cs" />
     <Compile Include="ViewModels\SettingsDirViewModel.cs" />
     <Compile Include="ViewModels\SettingsFolderViewModel.cs" />
+    <Compile Include="ViewModels\SettingsHyperViewModel.cs" />
     <Compile Include="ViewModels\SettingsRunnerViewModel.cs" />
     <Compile Include="ViewModels\SettingsViewModel.cs" />
     <Compile Include="ViewModels\SettingsWebViewModel.cs" />
@@ -169,6 +174,7 @@
     <Compile Include="ViewModels\TabViewModel.cs" />
     <Compile Include="Converters\BoolToHiddenConverter.cs" />
     <Compile Include="Events\ClipboardChangedEventArgs.cs" />
+    <Compile Include="ViewModels\TestViewModel.cs" />
     <Compile Include="ViewModels\WebSpecViewModel.cs" />
     <Compile Include="Views\ClipboardView.xaml.cs">
       <DependentUpon>ClipboardView.xaml</DependentUpon>
@@ -203,6 +209,9 @@
     <Compile Include="Views\SettingsFolderView.xaml.cs">
       <DependentUpon>SettingsFolderView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\SettingsHyperView.xaml.cs">
+      <DependentUpon>SettingsHyperView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
     </Compile>
@@ -224,6 +233,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CaliburnMicroBootstrapper.cs" />
+    <Compile Include="Views\TestView.xaml.cs">
+      <DependentUpon>TestView.xaml</DependentUpon>
+    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -280,6 +292,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\SettingsHyperView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\SettingsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -300,6 +316,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\TestView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -315,6 +335,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Resource Include="Resources\refresh.png" />
     <Resource Include="Resources\vehicle83.png" />
     <Resource Include="Resources\documents7.png" />
     <Resource Include="Resources\text file1 %281%29.png" />
@@ -335,7 +356,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

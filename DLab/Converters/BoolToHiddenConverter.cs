@@ -9,7 +9,7 @@ namespace DLab.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (bool)value ? Visibility.Hidden : Visibility.Visible;
+            return (bool) value ? Visibility.Hidden : Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -18,4 +18,32 @@ namespace DLab.Converters
             return val == Visibility.Hidden;
         }
     }
+
+    public class FlipBoolean : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !(bool)value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !(bool)value;
+        }
+    }
+
+    public class BooleanToCollapsedConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (bool)value ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (Visibility)value == Visibility.Collapsed;
+        }
+    }
+
 }
+

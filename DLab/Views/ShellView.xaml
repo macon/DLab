@@ -9,7 +9,10 @@
         BorderBrush="#007ACC"
         BorderThickness="1"
         Background="#2D2D30"
-        Height="300" Width="600" ShowInTaskbar="False" >
+        Height="350" 
+        MinWidth="525" 
+        SizeToContent="Width"
+        ShowInTaskbar="False" >
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome

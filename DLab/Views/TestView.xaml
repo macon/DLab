@@ -1,0 +1,127 @@
+﻿<UserControl x:Class="DLab.Views.TestView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:DLab.Views"
+             xmlns:behaviours="clr-namespace:DLab.Behaviours"
+             xmlns:converters="clr-namespace:DLab.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+
+    <DockPanel Width="Auto"  Background="#2D2D30">
+        
+        <DockPanel.Resources>
+            <converters:FlipBoolean x:Key="FlipBoolean"/>
+            <converters:BooleanToCollapsedConverter x:Key="BooleanToCollapsed"/>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+            <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+                <Setter Property="Foreground" Value="BlanchedAlmond"></Setter>
+                <Style.Triggers>
+                    <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                        <Setter Property="Background" Value="#2D2D30"></Setter>
+                    </Trigger>
+                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                        <Setter Property="Background" Value="#4D4D53"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="TransparentStyle" TargetType="{x:Type Button}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent">
+                                <ContentPresenter/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </DockPanel.Resources>
+
+        <!--        <TextBlock Name="Scanning" DockPanel.Dock="Top" Background="Aqua"></TextBlock>-->
+        
+        <DockPanel Dock="Top">
+            <Button Name="Rescan" DockPanel.Dock="Right"  Style="{StaticResource TransparentStyle}" Height="30" Width="30" ToolTip="Refresh" VerticalAlignment="Center">
+                <Image Margin="5 0 5 0" Source="../Resources/refresh.png" >
+                    <Image.Style>
+                        <Style TargetType="{x:Type Image}">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect ShadowDepth="0" Color="White" Opacity="1" BlurRadius="20"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </Button>
+
+            <TextBlock Text="Scanning" DockPanel.Dock="Left" Margin="5 2" FontSize="18" HorizontalAlignment="Stretch" Foreground="LightSteelBlue" Background="Red" 
+                    Visibility="{Binding Path=Scanning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            
+            <TextBox 
+                BorderBrush="#007ACC"
+                Foreground="BlanchedAlmond"
+                Margin="3 3 3 0"
+                Background="#2D2D30"
+                Name="UserCommand" 
+                FontSize="18" 
+                PreviewKeyUp="UserCommand_OnPreviewKeyUp" 
+                Visibility="{Binding Scanning, Converter={StaticResource BooleanToCollapsed}}"
+                HorizontalAlignment="Stretch" 
+                Text="{Binding UserCommand, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                IsEnabled="{Binding Scanning, Converter={StaticResource FlipBoolean}}"
+                HorizontalContentAlignment="Stretch"
+                DockPanel.Dock="Left"/>
+
+<!--            <Button Name="Rescan" Content="Refresh" DockPanel.Dock="Left"/>-->
+<!--            <CheckBox Name="DriveC" DockPanel.Dock="Left" VerticalAlignment="Center"/>-->
+<!--            <Label DockPanel.Dock="Left" VerticalAlignment="Center">C:</Label>-->
+<!--            <CheckBox Name="DriveD" DockPanel.Dock="Left" VerticalAlignment="Center"/>-->
+<!--            <Label DockPanel.Dock="Left" VerticalAlignment="Center">D:</Label>-->
+<!---->
+<!--            <TextBox Text="{Binding RootFolder, UpdateSourceTrigger=LostFocus}" -->
+<!--                VerticalAlignment="Center"-->
+<!--                Foreground="BlanchedAlmond"-->
+<!--                Margin="3 0"-->
+<!--                Background="#2D2D30"-->
+<!--                DockPanel.Dock="Top" -->
+<!--                Width="Auto">-->
+<!--                <TextBox.Style>-->
+<!--                    <Style TargetType="TextBox">-->
+<!--                        <Setter Property="BorderBrush" Value="DarkSlateGray"/>-->
+<!--                        <Style.Triggers>-->
+<!--                            <Trigger Property="IsFocused" Value="True">-->
+<!--                                <Setter Property="BorderBrush" Value="#007ACC" />-->
+<!--                            </Trigger>-->
+<!--                            <Trigger Property="IsMouseDirectlyOver" Value="True">-->
+<!--                                <Setter Property="BorderBrush" Value="#007ACC" />-->
+<!--                            </Trigger>-->
+<!--                        </Style.Triggers>-->
+<!--                    </Style>-->
+<!--                </TextBox.Style>-->
+<!--            </TextBox>-->
+        </DockPanel>
+        
+        <!--                 PreviewKeyUp="MatchedItems_OnPreviewKeyUp"-->
+        <ListBox Name="MatchedItems" 
+                 PreviewTextInput="MatchedItems_OnPreviewTextInput" 
+                 ItemsSource="{Binding Items}" 
+                 Width="Auto" 
+                 AlternationCount="2"
+                 Background="#2D2D30" BorderThickness="0">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock FontSize="16" behaviours:Attached.FormattedText="{Binding DisplayText}" ToolTip="{Binding QuickCode}" Width="Auto"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</UserControl>

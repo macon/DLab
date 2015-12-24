@@ -14,28 +14,34 @@ namespace DLab.Views
             InitializeComponent();
         }
 
-        private void UserCommand_OnPreviewKeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.Key != Key.Down || MatchedItems.Items.Count <= 0) return;
-
-            MatchedItems.Focus();
-            MatchedItems.SelectedIndex = 0;
-
-            MatchedItems.UpdateLayout();
-            var matchedItem = (ListBoxItem)MatchedItems.ItemContainerGenerator.ContainerFromItem(MatchedItems.SelectedItem);
-            matchedItem.Focus();
-        }
-
-        private void MatchedItems_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            (DataContext as HyperspaceViewModel).DoCommand(e.Text);
-            
+//        private void UserCommand_OnPreviewKeyUp(object sender, KeyEventArgs e)
+//        {
+//            if (e.Key != Key.Down || MatchedItems.Items.Count <= 0) return;
+//
+//            MatchedItems.Focus();
+//            MatchedItems.SelectedIndex = 0;
+//
+//            MatchedItems.UpdateLayout();
+//            var matchedItem = (ListBoxItem)MatchedItems.ItemContainerGenerator.ContainerFromItem(MatchedItems.SelectedItem);
+//            matchedItem.Focus();
+//        }
+//
+//        private void MatchedItems_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
+//        {
+////            (DataContext as HyperspaceViewModel).DoCommand(e.Text);
 //            UserCommand.Focus();
-        }
-
-        private void MatchedItems_OnPreviewKeyUp(object sender, KeyEventArgs e)
-        {
-//            (DataContext as HyperspaceViewModel).DoCommand(e.Key);
-        }
+//        }
+//
+//        private void MatchedItems_OnPreviewKeyUp(object sender, KeyEventArgs e)
+//        {
+//            if (e.Key != Key.Down || MatchedItems.Items.Count <= 0) return;
+//
+//            MatchedItems.Focus();
+//            MatchedItems.SelectedIndex = 0;
+//
+//            MatchedItems.UpdateLayout();
+//            var matchedItem = (ListBoxItem)MatchedItems.ItemContainerGenerator.ContainerFromItem(MatchedItems.SelectedItem);
+//            matchedItem.Focus();
+//        }
     }
 }

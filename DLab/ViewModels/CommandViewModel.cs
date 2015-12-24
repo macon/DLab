@@ -38,10 +38,7 @@ namespace DLab.ViewModels
             DisplayName = "Command";
         }
 
-        public int Order
-        {
-            get { return 0; }
-        }
+        public int Order => 0;
 
         public string Title
         {

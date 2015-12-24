@@ -15,8 +15,6 @@ namespace DLab.ViewModels
         private SettingsViewModel _settingViewModel;
         private bool _isBusy;
 //        public Screen ActiveViewModel => ActiveItem as Screen;
-        public Screen CommandViewModel { get; set; }
-        public Screen ClipboardViewModel { get; set; }
 
         public ShellViewModel(IWindowManager windowManager, IEventAggregator eventAggregator, IViewModelFactory viewModelFactory)
         {
@@ -25,12 +23,12 @@ namespace DLab.ViewModels
             _viewModelFactory = viewModelFactory;
             _eventAggregator.Subscribe(this);
 
-            CommandViewModel = _viewModelFactory.GetViewModel<CommandViewModel>();
-            ClipboardViewModel = _viewModelFactory.GetViewModel<ClipboardViewModel>();
             Items.AddRange(new []
             {
-                _viewModelFactory.GetViewModel<CommandViewModel>() as ITabViewModel,
-                _viewModelFactory.GetViewModel<ClipboardViewModel>() as ITabViewModel
+                _viewModelFactory.GetViewModel<CommandViewModel>(),
+                _viewModelFactory.GetViewModel<ClipboardViewModel>(),
+                _viewModelFactory.GetViewModel<TestViewModel>() as ITabViewModel
+//                _viewModelFactory.GetViewModel<HyperspaceViewModel>() as ITabViewModel
             });
             ActivateCommandModel();
         }
@@ -43,6 +41,16 @@ namespace DLab.ViewModels
         public void ActivateClipboardModel()
         {
             ActivateItem(Items.First(x => x is ClipboardViewModel));
+        }
+
+        public void ActivateHyperspaceModel()
+        {
+            ActivateItem(Items.First(x => x is HyperspaceViewModel));
+        }
+
+        public void ActivateTestModel()
+        {
+            ActivateItem(Items.First(x => x is TestViewModel));
         }
 
         public bool IsHidden

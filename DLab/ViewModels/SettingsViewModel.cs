@@ -8,6 +8,7 @@ namespace DLab.ViewModels
         private readonly SettingsWebViewModel _settingsWebViewModel;
         private readonly SettingsFolderViewModel _settingsFolderViewModel;
         private readonly SettingsRunnerViewModel _settingsRunnerViewModel;
+        private readonly SettingsHyperViewModel _settingsHyperViewModel;
 
         public SettingsViewModel(IViewModelFactory viewModelFactory)
         {
@@ -17,6 +18,7 @@ namespace DLab.ViewModels
             _settingsWebViewModel = viewModelFactory1.GetViewModel<SettingsWebViewModel>();
             _settingsDirViewModel = viewModelFactory1.GetViewModel<SettingsDirViewModel>();
             _settingsRunnerViewModel = viewModelFactory1.GetViewModel<SettingsRunnerViewModel>();
+            _settingsHyperViewModel = viewModelFactory1.GetViewModel<SettingsHyperViewModel>();
         }
 
         protected override void OnActivate()
@@ -26,7 +28,8 @@ namespace DLab.ViewModels
                 _settingsFolderViewModel,
                 _settingsWebViewModel,
                 _settingsDirViewModel,
-                _settingsRunnerViewModel
+                _settingsRunnerViewModel,
+                _settingsHyperViewModel
             });
 
             base.OnActivate();

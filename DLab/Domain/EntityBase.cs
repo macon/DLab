@@ -2,12 +2,18 @@ using ProtoBuf;
 
 namespace DLab.Domain
 {
+
+    public interface IIdentityEntity
+    {
+        int Id { get; set; }
+    }
+
     [ProtoContract]
     [ProtoInclude(100, typeof(CatalogEntry))]
     [ProtoInclude(101, typeof(WebSpec))]
     [ProtoInclude(102, typeof(Console))]
     [ProtoInclude(103, typeof(RunnerSpec))]
-    public class EntityBase : IWeightedCommand
+    public class EntityBase : IIdentityEntity, IWeightedCommand
     {
         public EntityBase()
         {
@@ -15,8 +21,7 @@ namespace DLab.Domain
             Target = "";
             Arguments = "";
         }
-        [ProtoMember(1)]
-        public virtual int Id { get; set; }
+
         [ProtoMember(2)]
         public virtual int Priority { get; set; }
         [ProtoMember(3)]
@@ -33,5 +38,8 @@ namespace DLab.Domain
                 Id = Command.GetHashCode();
             }
         }
+
+        [ProtoMember(1)]
+        public int Id { get; set; }
     }
 }

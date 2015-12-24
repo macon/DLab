@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Caliburn.Micro;
 using DLab.Domain;
 using Console = DLab.Domain.Console;
@@ -26,8 +27,7 @@ namespace DLab.ViewModels
         private void Initialise()
         {
             Consoles.Clear();
-            var items = _repo.Items;
-            Consoles.AddRange(items.Select(x => new ConsoleViewModel(x)));
+            Consoles.AddRange(_repo.Items.Select(x => new ConsoleViewModel(x)));
         }
 
         public void Add()
@@ -36,14 +36,29 @@ namespace DLab.ViewModels
             Consoles.Add(vm);
         }
 
+        public void Clear()
+        {
+            _repo.Clear();
+            Initialise();
+        }
+
+        public void Remove()
+        {
+            if (SelectedConsole == null) return;
+            _repo.Delete(SelectedConsole.Instance);
+            Consoles.Remove(SelectedConsole);
+        }
+
         public void Save()
         {
             foreach (var viewModel in Consoles.Where(x => x.Unsaved))
             {
                 viewModel.Instance.SetId();
             }
+
             _repo.ReplaceAll(Consoles.Select(x => x.Instance).ToList());
             _repo.Flush();
+            MessageBox.Show($"Saved {_repo.Items.Count}");
             TryClose();
         }
 

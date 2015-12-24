@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProtoBuf;
 
 namespace DLab.Domain
 {
-    public interface IRepository<TEntity> where TEntity : EntityBase
+    public interface IRepository<TEntity> where TEntity : IIdentityEntity
     {
         List<TEntity> Items { get; }
         void Save(TEntity item);
@@ -15,20 +16,19 @@ namespace DLab.Domain
         void Delete(TEntity item);
     }
 
-    public abstract class RepoBase<TDb, TEntity> : IRepository<TEntity>
-        where TDb : IDb<TEntity>, new()
-        where TEntity : EntityBase
+    public abstract class RepoBase<TDb, TIdentityEntity> : IRepository<TIdentityEntity>
+        where TDb : IDb<TIdentityEntity>, new()
+        where TIdentityEntity : IIdentityEntity
     {
         private TDb _db;
 
         protected string Filename { get; set; }
 
-        public RepoBase()
+        protected RepoBase()
         {
-            
         }
 
-        public List<TEntity> Items
+        public List<TIdentityEntity> Items
         {
             get
             {
@@ -48,7 +48,7 @@ namespace DLab.Domain
             }
         }
 
-        public void Save(TEntity item)
+        public void Save(TIdentityEntity item)
         {
             var existingItem = _db.Items.SingleOrDefault(x => x.Id == item.Id);
             if (existingItem != null)
@@ -58,7 +58,7 @@ namespace DLab.Domain
             _db.Items.Add(item);
         }
 
-        public void ReplaceAll(IList<TEntity> items)
+        public void ReplaceAll(IList<TIdentityEntity> items)
         {
             _db.Items.Clear();
             _db.Items.AddRange(items);
@@ -77,11 +77,48 @@ namespace DLab.Domain
             _db.Items.Clear();
         }
 
-        public void Delete(TEntity item)
+        public void Delete(TIdentityEntity item)
         {
             var existingSpec = _db.Items.SingleOrDefault(x => x.Id == item.Id);
             if (existingSpec == null) return;
             _db.Items.Remove(existingSpec);
+        }
+    }
+
+    public class HyperjumpRepo : RepoBase<Db<HyperjumpSpec>, HyperjumpSpec>
+    {
+        public HyperjumpRepo()
+        {
+            Filename = "Hyperjump.bin";
+        }
+
+        public IEnumerable<HyperjumpSpec> GetParents()
+        {
+            return 
+                from item in Items
+                let others = Items.Where(x => x != item).ToList()
+                let isChild = others.Any(other => IsChild(item.Path, other.Path))
+                where !isChild
+                select item;
+        }
+
+        private bool IsChild(string possibeChild, string possibleParent)
+        {
+            var childParts = possibeChild.Split('\\');
+            var parentParts = possibleParent.Split('\\');
+
+            if (parentParts.Length >= childParts.Length) return false;
+
+            for (var i = 0; i < parentParts.Length; i++)
+            {
+                var p = parentParts[i];
+                var c = childParts[i];
+                if (!p.Equals(c, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
@@ -93,14 +130,14 @@ namespace DLab.Domain
         }
     }
 
-    public interface IDb<T> where T: EntityBase
+    public interface IDb<T> where T: IIdentityEntity
     {
         List<T> Items { get; set; }
     }
 
     [ProtoContract]
     [ProtoInclude(150, typeof(ConsoleDb))]
-    public class Db<T> : IDb<T> where T : EntityBase
+    public class Db<T> : IDb<T> where T : IIdentityEntity
     {
         public Db()
         {

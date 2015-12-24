@@ -39,8 +39,6 @@ namespace DLab.Views
         /// </summary>
         private bool _userRequestedExit;
 
-
-
         public ShellView()
         {
             InitializeComponent();
@@ -56,7 +54,7 @@ namespace DLab.Views
             _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Alt, true, SetFocusToCommand);
             _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Alt, true, SetFocusToClipboard);
             _showSettingsHotKey = new CustomHotKey("_showSettingsHotKey", Key.S, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToSettings);
-            _showDirHotKey = new CustomHotKey("_showDirHotKey", Key.D, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToDir);
+            _showDirHotKey = new CustomHotKey("_showDirHotKey", Key.D, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToTest);
         }
 
         void Current_Deactivated(object sender, EventArgs e)
@@ -120,8 +118,10 @@ namespace DLab.Views
         {
             _vm = DataContext as ShellViewModel;
             InitialiseHotKey(this);
+//            SetFocusToCommand();
             SetFocusToCommand();
         }
+
 
         private void InitialiseHotKey(Window window)
         {
@@ -134,23 +134,24 @@ namespace DLab.Views
 
         private void SetFocusToCommand()
         {
-            SetFocus(0, () =>
+            _vm.ActivateCommandModel();
+            SetFocus(() =>
             {
-                _vm.ActivateCommandModel();
                 var view = ActiveItem.Content as CommandView;
                 var child = view.UserCommand;
                 child.Text = "";
                 child.Focus();
+                Keyboard.Focus(child);
             });
         }
 
         private void SetFocusToClipboard()
         {
             ClientHwnd = GetPreviousWindow();
+            _vm.ActivateClipboardModel();
 
-            SetFocus(1, () =>
+            SetFocus(() =>
             {
-                _vm.ActivateClipboardModel();
                 var view = ActiveItem.Content as ClipboardView;
                 var clipboardItems = view.ClipboardItems;
 
@@ -179,16 +180,31 @@ namespace DLab.Views
 
         private void SetFocusToDir()
         {
-            SetFocus(3, () =>
+            SetFocus(() =>
             {
-                var view = ActiveItem.Content as TabView;
-                var child = FindChild<TextBox>(view.Items, "UserCommand");
-                child.Text = "";
-                child.Focus();
+                _vm.ActivateHyperspaceModel();
+                var view = ActiveItem.Content as HyperspaceView;
+//                var child = view.UserCommand;
+//                child.Text = "";
+//                child.Focus();
+
             });
         }
 
-        private void SetFocus(int tabIndex, Action focusCommand)
+        private void SetFocusToTest()
+        {
+            _vm.ActivateTestModel();
+            SetFocus(() =>
+            {
+                var view = ActiveItem.Content as TestView;
+                var child = view.UserCommand;
+                child.Text = "";
+                child.Focus();
+
+            });
+        }
+
+        private void SetFocus(Action focusCommand)
         {
             Activate();
             Application.Current.MainWindow.Visibility = Visibility.Visible;

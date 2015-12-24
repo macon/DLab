@@ -1,50 +1,127 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Shapes;
+using DLab.Domain;
+using DLab.Infrastructure;
 using DLab.ViewModels;
+using log4net;
+using Path = System.IO.Path;
 
 namespace DLab.HyperJump
 {
     public class Scanner
     {
+        private readonly HyperjumpRepo _hyperjumpRepo;
         public Lookup<char, Folder> LetterIndex;
 
         private char[] _alpha;
-        private IEnumerable<Folder> _allFolders;
+        private ILog _log;
+
+        public Scanner(HyperjumpRepo hyperjumpRepo, IAppServices appServices)
+        {
+            _log = appServices.Log;
+            _hyperjumpRepo = hyperjumpRepo;
+        }
+
         //        private ILookup<string, Folder> _folderLookup;
 
         public ILookup<string, Folder> FolderLookup { get; set; }
         //        public Dictionary<string, Folder> FlatList { get; set; }
         public Folder God { get; set; }
 
-        public void Scan(DirectoryInfo startingDi)
+        public Task<bool> ScanAsync()
         {
-            _alpha = new[]
+            return Task.Run(() =>
             {
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
-                'v', 'w', 'x', 'y', 'z'
+                Scan();
+                return true;
+            });
+        }
+
+        public void Scan()
+        {
+            var sw = Stopwatch.StartNew();
+
+            var parents = _hyperjumpRepo.GetParents().ToList();
+
+            var folders = parents.Where(x => !x.Exclude).Select(folderSpec =>
+            {
+                _log.Debug($"scanning {folderSpec.Path}");
+
+                return ScanEx2(new DirectoryInfo(folderSpec.Path));
+            }).ToList();
+
+            var allFolders = folders.SelectMany(x => x as Folder[] ?? x.ToArray()).ToList();
+
+            _log.Debug($"{allFolders.Count} folders");
+
+            FolderLookup = allFolders
+                                .Select(x => new { Key = x.QuickCode, Thing = x })
+                                .Concat(allFolders.Select(x => new { Key = x.Name, Thing = x }))
+                                .ToLookup(x => x.Key, x => x.Thing);
+
+            _log.Debug($"{FolderLookup.Count} lookup keys");
+
+            var items = FolderLookup.Where(l => l.Key.IndexOf("te", StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+            _log.Debug($"found {items.Count} matching 'te'");
+
+//            var items = FolderLookup.Where(l => l.Key == "templates").ToList();
+            foreach (var item in items.SelectMany(l => l))
+            {
+                _log.Debug(item.FullPath);
+            }
+        }
+
+        private IEnumerable<Folder> ScanEx2(DirectoryInfo startingDi)
+        {
+            var rootFolder = new Folder
+            {
+                Name = startingDi.Name,
+                FullPath = startingDi.FullName
             };
+            rootFolder.Lineage.Add(0);
 
+            var folderQueue = new Queue<Folder>(new[] { rootFolder });
 
-            //            God = ScanEx(startingDi);
-            _allFolders = ScanEx2(startingDi);
+            while (folderQueue.Any())
+            {
+                var currentFolder = folderQueue.Dequeue();
 
-            FolderLookup = _allFolders.ToLookup(x => x.Name.ToLower(), x => x);
+                var code = ExtractCode(currentFolder.Name);
+                currentFolder.QuickCode = code;
 
-            //            LetterIndex = (Lookup<char, Folder>)BuildLetterLookup(God).ToLookup(x => x.Name.ToLower()[0], x => x);
+                var di = new DirectoryInfo(currentFolder.FullPath);
 
-            //            FolderLookup = (Lookup<string, Folder>) 
-            //                God.Children.ToLookup(
-            //                    c => string.Concat(c.Parent.Name.Substring(0,1),c.Name.Substring(0,1)), c => c
-            //                );
+                var subDirIndex = 0;
 
-            //            FolderLookup = (Lookup<string, Folder>) FlatList.ToLookup(x => x.Key, x => x.Value);
+                try
+                {
+                    foreach (var subDi in di.GetDirectories())
+                    {
+                        var subFolder = new Folder
+                        {
+                            Name = subDi.Name,
+                            FullPath = subDi.FullName,
+                            Parent = currentFolder,
+                            Lineage = new List<int>(currentFolder.Lineage) { subDirIndex++ }
+                        };
 
-            //            FolderLookup = (Lookup<string, Folder>) Descendants(God).ToLookup(x => x.Key.ToLower(), x => x.Folder);
-
+                        currentFolder.Children.Add(subFolder);
+                        folderQueue.Enqueue(subFolder);
+                    }
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    Debug.WriteLine($"{e.Message}");
+                    continue;
+                }
+                yield return currentFolder;
+            }
         }
 
         private IEnumerable<Folder> BuildLetterLookup(Folder folder)
@@ -84,29 +161,6 @@ namespace DLab.HyperJump
             }
         }
 
-
-        private IEnumerable<Folder> ScanEx2(DirectoryInfo startingDi)
-        {
-            var folderQueue = new Queue<Folder>(new[] { new Folder { Name = startingDi.Name.ToLower(), FullPath = startingDi.FullName.ToLower() } });
-
-            while (folderQueue.Any())
-            {
-                var currentFolder = folderQueue.Dequeue();
-
-                var di = new DirectoryInfo(currentFolder.FullPath);
-
-                foreach (var subDi in di.SafeGetDirectories())
-                {
-                    var subFolder = new Folder { Name = subDi.Name.ToLower(), FullPath = subDi.FullName.ToLower(), Parent = currentFolder };
-                    currentFolder.Children.Add(subFolder);
-                    folderQueue.Enqueue(subFolder);
-                }
-
-                yield return currentFolder;
-            }
-        }
-
-
         private Folder ScanEx(DirectoryInfo startingDi)
         {
             var f = new Folder { Name = startingDi.Name };
@@ -122,23 +176,47 @@ namespace DLab.HyperJump
 
             return f;
         }
-    }
 
-    public static class Extensions
-    {
-        public static DirectoryInfo[] SafeGetDirectories(this DirectoryInfo di)
+        public static string SplitUpperCaseToString(string source)
         {
-            var result = new DirectoryInfo[0];
+            return string.Join(" ", ExtractCode(source));
+        }
 
-            try
+        public static string ExtractCode(string source)
+        {
+            if (string.IsNullOrEmpty(source))
             {
-                result = di.GetDirectories();
+                return "";
             }
-            catch (UnauthorizedAccessException)
+
+            var code = new StringBuilder();
+
+            var letters = source.ToCharArray();
+            var previousChar = char.MinValue;
+
+            code.Append(letters[0].ToString());
+
+            for (var i = 1; i < letters.Length; i++)
             {
-                
+                var thisChar = letters[i];
+
+                if ((char.IsLetterOrDigit(thisChar) && IsDelimiter(previousChar)) || char.IsUpper(thisChar))
+                {
+                    code.Append(thisChar.ToString());
+                }
+
+                previousChar = thisChar;
             }
-            return result;
+
+            return code.ToString();
+        }
+
+        private static bool IsDelimiter(char previousChar)
+        {
+            return char.IsWhiteSpace(previousChar) ||
+                previousChar == '-' ||
+                previousChar == '.' ||
+                previousChar == '_';
         }
     }
 }

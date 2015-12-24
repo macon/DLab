@@ -58,9 +58,6 @@ namespace DLab.ViewModels
             }
         }
 
-        public bool Unsaved
-        {
-            get { return Id == default(int); }
-        }
+        public bool Unsaved => Id == default(int);
     }
 }

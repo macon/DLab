@@ -9,25 +9,34 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using Caliburn.Micro;
 using DLab.HyperJump;
 
 namespace DLab.ViewModels
 {
-    public class HyperspaceViewModel : Screen, ITabViewModel
+    public class FolderMatch
+    {
+        public int Position { get; set; }
+        public Folder MatchedFolder { get; set; }
+    }
+
+    public class HyperspaceViewModel : Screen//, ITabViewModel
     {
         private string _userCommand = "";
         private Scanner _scanner;
         private string _rootFolder = "";
         private ObservablePropertyBacking<string> _textInput = new ObservablePropertyBacking<string>();
+        private bool _scanning;
 
         public HyperspaceViewModel()
         {
-            Items = new ObservableCollection<Folder>();
-            _scanner = new Scanner();
-            RootFolder = "c:\\dev";
-            DisplayName = "Dir";
+            Items = new ObservableCollection<HyperJumpFolderViewModel>();
+            _scanner = new Scanner(null, null);
+//            RootFolder = "d:\\";
+
+            //            _textInput = new ObservablePropertyBacking<string>();
 
             _textInput
                 .Throttle(TimeSpan.FromMilliseconds(300))
@@ -48,33 +57,47 @@ namespace DLab.ViewModels
             }
         }
 
+        public bool Scanning2
+        {
+            get { return _scanning; }
+            set
+            {
+//                if (_scanning == value) { return; }
+                _scanning = value;
+                Debug.WriteLine($"IsNotifying:{IsNotifying}");
+//                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Scanning)));
+                NotifyOfPropertyChange();
+                Debug.WriteLine($"Scanning changed to {_scanning}");
+            }
+        }
+
+        public void Rescan()
+        {
+            Scanning2 = true;
+            Debug.WriteLine($"Pre-scan {Thread.CurrentThread.ManagedThreadId}");
+
+//            await _scanner.ScanAsync(new DirectoryInfo(RootFolder));
+            Thread.Sleep(1000);
+
+            Debug.WriteLine($"Post-scan {Thread.CurrentThread.ManagedThreadId}");
+//            Scanning = false;
+        }
+
         public string RootFolder
         {
             get { return _rootFolder; }
             set
             {
-                if (_rootFolder.ToLower().Equals(value.ToLower())) return;
+//                if (_rootFolder.ToLower().Equals(value.ToLower())) return;
                 _rootFolder = value;
-                _scanner.Scan(new DirectoryInfo(RootFolder));
-                //                ParseCommand(UserCommand);
+                Scanning2 = !Scanning2;
+//                Thread.Sleep(500);
+                //                Rescan();
                 NotifyOfPropertyChange();
             }
         }
 
-        //        public string UserCommand
-        //        {
-        //            get { return _userCommand; }
-        //            set
-        //            {
-        //                _userCommand = value;
-        //
-        //                ParseCommand(_userCommand);
-        //
-        //                OnPropertyChanged();
-        //            }
-        //        }
-
-        public Folder SelectedItem { get; set; }
+        public HyperJumpFolderViewModel SelectedItem { get; set; }
 
         private void ParseCommand(string userCommand)
         {
@@ -84,68 +107,74 @@ namespace DLab.ViewModels
                 return;
             }
 
-            var parts = userCommand.ToLower().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = userCommand.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            var firstPart = parts[0];
+            var masterList = parts.Select((x, i) => GetHighestFolderMatches(x, i != 0)).ToList();
 
-            var matchedFolders =
-                _scanner.FolderLookup.Where(
-                    l => l.Key.Contains(firstPart)).SelectMany(l => l);
+            var drivingSet = masterList.Last();
+            var survivors = new List<FolderMatch>();
 
-            for (var i = 1; i < parts.Length; i++)
+            foreach (var folder in drivingSet)
             {
-                var part = parts[i];
-                var isLast = i == parts.Length - 1;
+                var orphaned = false;
 
-                if (part == ".")
+                for (var parentLevel = masterList.Count - 2; parentLevel >= 0; parentLevel--)
                 {
-                    matchedFolders = isLast 
-                        ? GetDescendants(matchedFolders) 
-                        : GetSpecificDescendants(matchedFolders, parts[++i]);
-                    continue;
-                }
+                    if (masterList[parentLevel].Any(pf => IsChild(folder.MatchedFolder, pf.MatchedFolder))) continue;
 
-                matchedFolders = matchedFolders
-                    .SelectMany(f => f.Children)
-                    .Where(c => c.Name.Contains(part));
+                    orphaned = true;
+                    break;
+                }
+                if (!orphaned) { survivors.Add(folder); }
             }
 
+            //            var matchedFolders = survivors.Select(f => new FolderMatch { MatchedFolder = f });
+
             Items.Clear();
-            foreach (var item in matchedFolders)
+            foreach (var item in survivors.OrderBy(f => f.MatchedFolder.Level).ThenBy(f => f.Position).Take(200))
             {
-                Items.Add(item);
+                Items.Add(new HyperJumpFolderViewModel(item.MatchedFolder, parts));
             }
             SelectedItem = Items.FirstOrDefault();
         }
 
-        private IEnumerable<Folder> GetDescendants(IEnumerable<Folder> baseFolders)
+        private bool IsChild(Folder child, Folder parent)
         {
-            var folderQueue = new Queue<Folder>(baseFolders.SelectMany(x => x.Children));
+            if (parent.Lineage.Count >= child.Lineage.Count) { return false; }
 
-            while (folderQueue.Any())
+            for (var i = 0; i < parent.Lineage.Count; i++)
             {
-                var subFolder = folderQueue.Dequeue();
-                yield return subFolder;
-                foreach (var n in subFolder.Children) folderQueue.Enqueue(n);
+                if (parent.Lineage[i] != child.Lineage[i])
+                {
+                    return false;
+                }
             }
+            return true;
         }
 
-        private IEnumerable<Folder> GetSpecificDescendants(IEnumerable<Folder> baseFolders, string folderNamePattern)
+        private List<FolderMatch> GetHighestFolderMatches(string firstPart, bool removeDescendants)
         {
-            var folderQueue = new Queue<Folder>(baseFolders.SelectMany(x => x.Children));
+            var initialFolders = _scanner.FolderLookup
+                .Where(l => l.Key.IndexOf(firstPart, StringComparison.OrdinalIgnoreCase) >= 0)
+                .SelectMany(l => l)
+                .Select(f => new FolderMatch { MatchedFolder = f, Position = f.Name.IndexOf(firstPart, StringComparison.OrdinalIgnoreCase) })
+                .ToList();
 
-            while (folderQueue.Any())
+            if (!removeDescendants) { return initialFolders; }
+
+            var redundantFolders = new List<FolderMatch>();
+
+            foreach (var folder in initialFolders.OrderBy(f => f.MatchedFolder.Level))
             {
-                var subFolder = folderQueue.Dequeue();
-                if (subFolder.Name.Contains(folderNamePattern))
-                {
-                    yield return subFolder;
-                    continue;
-                }
-
-                foreach (var n in subFolder.Children) folderQueue.Enqueue(n);
+                redundantFolders.AddRange(
+                    initialFolders.Where(f => f.MatchedFolder.Level > folder.MatchedFolder.Level && f.MatchedFolder.Lineage[folder.MatchedFolder.Level - 1] == folder.MatchedFolder.Lineage[folder.MatchedFolder.Level - 1]));
             }
-            
+
+            foreach (var folder in redundantFolders)
+            {
+                initialFolders.Remove(folder);
+            }
+            return initialFolders;
         }
 
         //        private void ParseCommand(string userCommand)
@@ -195,61 +224,19 @@ namespace DLab.ViewModels
             return key.ToLower();
         }
 
-        public ObservableCollection<Folder> Items { get; set; }
+        public ObservableCollection<HyperJumpFolderViewModel> Items { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public int Order
-        {
-            get { return 9; }
-        }
-
-        public void DoCommand(string key)
-        {
-            var commandPrompt = @"C:\Windows\system32\cmd.exe";
-            var powershell = @"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe";
-
-            if (key.ToLower() == "c")
-            {
-                if (!File.Exists(commandPrompt))
-                {
-                    MessageBox.Show("Could not find {0}", commandPrompt);
-                    return;
-                }
-                var args = string.Format(@"/K ""cd /d {0}""", SelectedItem.FullPath);
-                var psi = new ProcessStartInfo(commandPrompt) {Arguments = args};
-                psi.UseShellExecute = false;
-                Process.Start(psi);
-                return;
-            }
-
-            if (key.ToLower() == "p")
-            {
-                if (!File.Exists(powershell))
-                {
-                    MessageBox.Show("Could not find {0}", powershell);
-                    return;
-                }
-                var args = string.Format(@"-NoExit -Command ""& {{Set-Location {0}}}""", SelectedItem.FullPath);
-                var psi = new ProcessStartInfo(powershell) { Arguments = args };
-                psi.UseShellExecute = false;
-                Process.Start(psi);
-            }
-
-            if (key.ToLower() == "e")
-            {
-                var psi = new ProcessStartInfo(SelectedItem.FullPath);
-                Process.Start(psi);
-            }
-        }
+        public int Order { get; }
     }
 
 
     public class ObservablePropertyBacking<T> : IObservable<T>
     {
-        private Subject<T> _innerObservable = new Subject<T>();
-
+        private readonly Subject<T> _innerObservable = new Subject<T>();
         private T _value;
+
         public T Value
         {
             get { return _value; }
