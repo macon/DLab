@@ -229,8 +229,9 @@ namespace DLab.ViewModels
 	    {
 	        var clipboard = BuildViewModelFromClipboard();
 
-	        return clipboard.Text == viewModel.Text
-	               && clipboard.DataType == viewModel.DataType;
+	        return clipboard != null 
+                && clipboard.Text == viewModel.Text 
+                && clipboard.DataType == viewModel.DataType;
 	    }
 
 	    public string ActiveClipboardString { get; private set; }

@@ -48,13 +48,15 @@ namespace DLab.HyperJump
             var sw = Stopwatch.StartNew();
 
             var parents = _hyperjumpRepo.GetParents().ToList();
+            var exclusions = _hyperjumpRepo.Items.Where(x => x.Exclude).ToList();
 
-            var folders = parents.Where(x => !x.Exclude).Select(folderSpec =>
-            {
-                _log.Debug($"scanning {folderSpec.Path}");
+            var folders = parents.Where(x => !x.Exclude)
+                                 .Select(folderSpec =>
+                                    {
+                                        _log.Debug($"scanning {folderSpec.Path}");
 
-                return ScanEx2(new DirectoryInfo(folderSpec.Path));
-            }).ToList();
+                                        return ScanEx2(new DirectoryInfo(folderSpec.Path), exclusions);
+                                    }).ToList();
 
             var allFolders = folders.SelectMany(x => x as Folder[] ?? x.ToArray()).ToList();
 
@@ -67,9 +69,9 @@ namespace DLab.HyperJump
 
             _log.Debug($"{FolderLookup.Count} lookup keys");
 
-            var items = FolderLookup.Where(l => l.Key.IndexOf("te", StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
-
-            _log.Debug($"found {items.Count} matching 'te'");
+//            var items = FolderLookup.Where(l => l.Key.IndexOf("te", StringComparison.InvariantCultureIgnoreCase) >= 0).ToList();
+//
+//            _log.Debug($"found {items.Count} matching 'te'");
 
 //            var items = FolderLookup.Where(l => l.Key == "templates").ToList();
 //            foreach (var item in items.SelectMany(l => l))
@@ -78,8 +80,10 @@ namespace DLab.HyperJump
 //            }
         }
 
-        private IEnumerable<Folder> ScanEx2(DirectoryInfo startingDi)
+        private IEnumerable<Folder> ScanEx2(DirectoryInfo startingDi, List<HyperjumpSpec> exclusions)
         {
+            if (FoldersContain(exclusions, startingDi.FullName)) { yield break; }
+
             var rootFolder = new Folder
             {
                 Name = startingDi.Name,
@@ -104,25 +108,40 @@ namespace DLab.HyperJump
                 {
                     foreach (var subDi in di.GetDirectories())
                     {
+                        if (FoldersContain(exclusions, subDi.FullName))
+                        {
+                            continue;
+                        }
+
                         var subFolder = new Folder
                         {
                             Name = subDi.Name,
                             FullPath = subDi.FullName,
                             Parent = currentFolder,
-                            Lineage = new List<int>(currentFolder.Lineage) { subDirIndex++ }
+                            Lineage = new List<int>(currentFolder.Lineage) {subDirIndex++}
                         };
 
                         currentFolder.Children.Add(subFolder);
                         folderQueue.Enqueue(subFolder);
                     }
                 }
+                catch (PathTooLongException)
+                {
+                    _log.Error($"Caught {nameof(PathTooLongException)} under {di.FullName}");
+                    continue;
+                }
                 catch (UnauthorizedAccessException e)
                 {
-                    Debug.WriteLine($"{e.Message}");
+                    _log.Error($"Caught {nameof(UnauthorizedAccessException)} under {di.FullName}");
                     continue;
                 }
                 yield return currentFolder;
             }
+        }
+
+        private bool FoldersContain(List<HyperjumpSpec> exclusions, string fullName)
+        {
+            return exclusions.Any(x => x.Path.Equals(fullName, StringComparison.OrdinalIgnoreCase));
         }
 
         private IEnumerable<Folder> BuildLetterLookup(Folder folder)

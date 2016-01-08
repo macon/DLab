@@ -143,6 +143,8 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\ClipboardItemViewModel.cs" />
+    <Compile Include="ViewModels\Folder.cs" />
+    <Compile Include="ViewModels\FolderExtensions.cs" />
     <Compile Include="ViewModels\FolderSpecViewModel.cs" />
     <Compile Include="Infrastructure\CustomHotkey.cs" />
     <Compile Include="Infrastructure\HotKey.cs" />

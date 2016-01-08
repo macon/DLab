@@ -82,29 +82,4 @@ namespace DLab.ViewModels
             return buffer.ToString();
         }
     }
-
-    public class Folder
-    {
-        public Folder()
-        {
-            Children = new List<Folder>();
-            Lineage = new List<int>();
-        }
-
-        public List<int> Lineage { get; set; }
-        public int Level => Lineage.Count;
-        public string Name { get; set; }
-        public string FullPath { get; set; }
-        public Folder Parent { get; set; }
-        public IList<Folder> Children { get; set; }
-        public string QuickCode { get; set; }
-        public string Drive => FullPath.Split(new[]{'\\'}, StringSplitOptions.RemoveEmptyEntries)[0];
-
-        public string MakeKey()
-        {
-            return Parent == null
-                ? Name.Substring(0, 1)
-                : string.Concat(Parent.Name.Substring(0, 1), Name.Substring(0, 1));
-        }
-    }
 }

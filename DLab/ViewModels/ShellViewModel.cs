@@ -50,6 +50,7 @@ namespace DLab.ViewModels
 
         public void ActivateTestModel()
         {
+            if (ActiveItem is TestViewModel) { return; }
             ActivateItem(Items.First(x => x is TestViewModel));
         }
 

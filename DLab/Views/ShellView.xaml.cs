@@ -198,9 +198,9 @@ namespace DLab.Views
             {
                 var view = ActiveItem.Content as TestView;
                 var child = view.UserCommand;
-                child.Text = "";
+//                child.Text = "";
                 child.Focus();
-
+                Keyboard.Focus(child);
             });
         }
 

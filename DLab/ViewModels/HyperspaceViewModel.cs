@@ -16,6 +16,18 @@ using DLab.HyperJump;
 
 namespace DLab.ViewModels
 {
+    public class FolderMatches
+    {
+        public string Term { get; private set; }
+        public List<FolderMatch> Matches { get; private set; }
+
+        public FolderMatches(string term, List<FolderMatch> matches)
+        {
+            Term = term;
+            Matches = matches;
+        }
+    }
+
     public class FolderMatch
     {
         public int Position { get; set; }

@@ -19,7 +19,7 @@
                             </Setter.Value>
                         </Setter>
                     </Style>
-                    
+
                 </ResourceDictionary>
                 
 <!--                <ResourceDictionary Source="/WPF.Themes;component/ExpressionDark/Theme.xaml" />-->

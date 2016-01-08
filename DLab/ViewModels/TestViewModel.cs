@@ -8,12 +8,15 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using Caliburn.Micro;
 using DLab.Domain;
 using DLab.HyperJump;
 using DLab.Infrastructure;
+using Console = System.Console;
 using ILog = log4net.ILog;
+using LogManager = log4net.LogManager;
 
 namespace DLab.ViewModels
 {
@@ -41,41 +44,50 @@ namespace DLab.ViewModels
         private ObservablePropertyBacking<string> _textInput = new ObservablePropertyBacking<string>();
         private string _rootFolder = "";
         private ILog _log;
+        private CancellationTokenSource _cts;
 
-        public ObservableCollection<HyperJumpFolderViewModel> Items { get; set; }
+//        public ObservableCollection<HyperJumpFolderViewModel> MatchedItems { get; set; }
+        public BindableCollection<HyperJumpFolderViewModel> MatchedItems { get; set; }
+
+        public HyperJumpFolderViewModel SelItem
+        {
+            get
+            {
+                return _selItem;
+            }
+            set
+            {
+                _selItem = value;
+            }
+        }
 
         public TestViewModel(HyperjumpRepo hyperjumpRepo, IRepository<Domain.Console> consoleRepo, IAppServices appServices)
         {
             _log = appServices.Log;
             _hyperjumpRepo = hyperjumpRepo;
             _consoleRepo = consoleRepo;
-            Items = new ObservableCollection<HyperJumpFolderViewModel>();
+            _previousResults = new List<FolderMatches>();
+            MatchedItems = new BindableCollection<HyperJumpFolderViewModel>();
+//            MatchedItems = new ObservableCollection<HyperJumpFolderViewModel>();
             _scanner = new Scanner(hyperjumpRepo, appServices);
             Rescan();
-//            RootFolder = "d:\\";
 
             _textInput
                 .Throttle(TimeSpan.FromMilliseconds(300))
                 .Do(s => Debug.WriteLine(s))
+                .Do(s => CancelCurrentScan())
                 .SubscribeOn(NewThreadScheduler.Default)
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(ParseCommand);
         }
 
-//        public string RootFolder
-//        {
-//            get { return _rootFolder; }
-//            set
-//            {
-//                if (_rootFolder.ToLower().Equals(value.ToLower())) return;
-//                if (!Directory.Exists(value)) return;
-//                _rootFolder = value;
-////                Scanning = !Scanning;
-//                //                Thread.Sleep(500);
-//                Rescan();
-//                NotifyOfPropertyChange();
-//            }
-//        }
+        private void CancelCurrentScan()
+        {
+            if (_cts == null) return;
+            _cts.Cancel();
+            _cts = null;
+            _log.Debug("request cancellation");
+        }
 
         public async void Rescan()
         {
@@ -88,17 +100,6 @@ namespace DLab.ViewModels
             Scanning = false;
         }
 
-
-        //        public string UserCommand
-        //        {
-        //            get { return _userCommand; }
-        //            set
-        //            {
-        //                _userCommand = value;
-        //                Scanning = !Scanning;
-        //                NotifyOfPropertyChange();
-        //            }
-        //        }
         public string UserCommand
         {
             get { return _textInput.Value; }
@@ -120,35 +121,81 @@ namespace DLab.ViewModels
             }
         }
 
-        private void ParseCommand(string userCommand)
+        private async void ParseCommand(string userCommand)
         {
+            _cts?.Cancel();
+            _cts = new CancellationTokenSource();
+
+            MatchedItems.Clear();
+
             if (string.IsNullOrEmpty(userCommand))
             {
-                Items.Clear();
                 return;
             }
 
-            var parts = userCommand.Split(new[] {' '}, StringSplitOptions.RemoveEmptyEntries);
+            _log.Debug($"ParseCommand('{userCommand}')");
 
-            if (parts.Length ==0) { return; }
+            var parts = userCommand.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Where(p => p.Length > 1).ToArray();
 
-            var masterList = parts
-                                .Where(x => x.Length > 1)
-                                .Select((x, i) => GetHighestFolderMatches(x, i == 0))
-                                .ToList();
+            //            Task.Run(() => ParseCommandAsync(userCommand, _cts.Token), _cts.Token);
 
-            if (!masterList.Any()) { return; }
+            List<FolderMatch> survivors;
+            try
+            {
+                survivors = await ParseCommandAsync(parts, _cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                _log.Debug($"operation cancelled. search args:{userCommand}");
+                return;
+            }
+            if (survivors == null) { return;}
 
-            var drivingSet = masterList.Last();
+            foreach (var item in survivors.OrderBy(f => f.MatchedFolder.Level).ThenBy(f => f.Position).Take(200))
+            {
+                MatchedItems.Add(new HyperJumpFolderViewModel(item.MatchedFolder, parts));
+            }
+            SelectedMatchedItem = MatchedItems.FirstOrDefault();
+        }
+
+        private List<FolderMatches> _previousResults;
+        private HyperJumpFolderViewModel _selectedMatchedItem;
+        private HyperJumpFolderViewModel _selItem;
+
+        private async Task<List<FolderMatch>> ParseCommandAsync(string[] parts, CancellationToken token)
+        {
+            if (parts.Length ==0) { return null; }
+
+            var searchTasks = parts.Where(p => !_previousResults.Any(x => x.Term.Equals(p, StringComparison.OrdinalIgnoreCase)))
+                                   .Select(part => Task.Run(() => GetHighestFolderMatches(part, false, token), token))
+                                   .ToList();
+
+            var res = await Task.WhenAll(searchTasks);
+
+            var newMatches = res.ToList();
+
+            var finalSet = parts.Select(p =>
+            {
+                var found = _previousResults.FirstOrDefault(x => x.Term.Equals(p, StringComparison.OrdinalIgnoreCase)) ??
+                            newMatches.FirstOrDefault(x => x.Term.Equals(p, StringComparison.OrdinalIgnoreCase));
+                return found;
+            }).ToList();
+
+            if (!finalSet.Any()) { return null; }
+
+            var drivingSet = finalSet.Last();
             var survivors = new List<FolderMatch>();
 
-            foreach (var folder in drivingSet)
+            foreach (var folder in drivingSet.Matches)
             {
                 var orphaned = false;
 
-                for (var parentLevel = masterList.Count - 2; parentLevel >= 0; parentLevel--)
+                for (var parentLevel = newMatches.Count - 2; parentLevel >= 0; parentLevel--)
                 {
-                    if (masterList[parentLevel].Any(pf => IsChild(folder.MatchedFolder, pf.MatchedFolder))) continue;
+                    token.ThrowIfCancellationRequested();
+                    var possibleParents = finalSet[parentLevel].Matches;
+
+                    if (possibleParents.Any(pf => folder.MatchedFolder.IsChildOf(pf.MatchedFolder))) continue;
 
                     orphaned = true;
                     break;
@@ -156,79 +203,80 @@ namespace DLab.ViewModels
                 if (!orphaned) { survivors.Add(folder); }
             }
 
-            Items.Clear();
-            foreach (var item in survivors.OrderBy(f => f.MatchedFolder.Level).ThenBy(f => f.Position).Take(200))
-            {
-                Items.Add(new HyperJumpFolderViewModel(item.MatchedFolder, parts));
-            }
-            SelectedItem = Items.FirstOrDefault();
+            _previousResults = finalSet;
+
+            return survivors;
         }
 
-        public HyperJumpFolderViewModel SelectedItem { get; set; }
-
-        private bool IsChild(Folder child, Folder parent)
+        public HyperJumpFolderViewModel SelectedMatchedItem
         {
-            if (parent.Lineage.Count >= child.Lineage.Count) { return false; }
-
-            for (var i = 0; i < parent.Lineage.Count; i++)
+            get { return _selectedMatchedItem; }
+            set
             {
-                if (parent.Lineage[i] != child.Lineage[i])
-                {
-                    return false;
-                }
+                _selectedMatchedItem = value;
+                NotifyOfPropertyChange();
             }
-            return true;
         }
 
-        private List<FolderMatch> GetHighestFolderMatches(string firstPart, bool removeDescendants)
+        private FolderMatches GetHighestFolderMatches(string searchTerm, bool removeDescendants, CancellationToken token)
         {
+            var sw = Stopwatch.StartNew();
             var initialFolders = _scanner.FolderLookup
-                .Where(l => l.Key.IndexOf(firstPart, StringComparison.OrdinalIgnoreCase) >= 0)
+                .WithCancellation(token)
+                .Where(l =>
+                {
+//                    _log.Debug("[Where]");
+//                    Thread.Sleep(300);
+//                    await Task.Delay(200, token);
+                    return l.Key.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0;
+                })
                 .SelectMany(l => l)
                 .Distinct(new DistinctFolderComparer())
-                .Select(f => new FolderMatch { MatchedFolder = f, Position = f.Name.IndexOf(firstPart, StringComparison.OrdinalIgnoreCase) })
+                .Select(f => new FolderMatch { MatchedFolder = f, Position = f.Name.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) })
                 .ToList();
 
-            if (!removeDescendants) { return initialFolders; }
+            _log.Debug($"seeking {searchTerm} took {sw.ElapsedMilliseconds}");
 
-            var redundantFolders = new List<FolderMatch>();
-
-            foreach (var folder in initialFolders.OrderBy(f => f.MatchedFolder.Level))
-            {
-                var childFolders = initialFolders.Where(f => f.MatchedFolder.Drive == folder.MatchedFolder.Drive &&
-                                                             f.MatchedFolder.Level > folder.MatchedFolder.Level &&
-                                                             f.MatchedFolder.Lineage[folder.MatchedFolder.Level - 1] ==
-                                                             folder.MatchedFolder.Lineage[folder.MatchedFolder.Level - 1]).ToList();
-                if (childFolders.Count == 0) { continue; }
-
-                foreach (var f in childFolders)
-                {
-                    initialFolders.Remove(f);
-                }
-
-//                redundantFolders.AddRange(childFolders);
-            }
-
-//            foreach (var folder in redundantFolders)
-//            {
-//                initialFolders.Remove(folder);
-//            }
-
-            return initialFolders;
+//            if (!removeDescendants) { return new FolderMatches(searchTerm, initialFolders); }
+            return new FolderMatches(searchTerm, initialFolders);
+            //            var redundantFolders = new List<FolderMatch>();
+            //
+            //            foreach (var folder in initialFolders.OrderBy(f => f.MatchedFolder.Level))
+            //            {
+            //                var childFolders = initialFolders.Where(f => f.MatchedFolder.Drive == folder.MatchedFolder.Drive &&
+            //                                                             f.MatchedFolder.Level > folder.MatchedFolder.Level &&
+            //                                                             f.MatchedFolder.Lineage[folder.MatchedFolder.Level - 1] ==
+            //                                                             folder.MatchedFolder.Lineage[folder.MatchedFolder.Level - 1]).ToList();
+            //                if (childFolders.Count == 0) { continue; }
+            //
+            //                foreach (var f in childFolders)
+            //                {
+            //                    initialFolders.Remove(f);
+            //                }
+            //
+            ////                redundantFolders.AddRange(childFolders);
+            //            }
+            //
+            ////            foreach (var folder in redundantFolders)
+            ////            {
+            ////                initialFolders.Remove(folder);
+            ////            }
+            //
+            //            return initialFolders;
         }
 
         public void DoCommand(char key)
         {
-            var console = _consoleRepo.Items.FirstOrDefault(x => x.Hotkey == key);
+            var console = _consoleRepo.Items.FirstOrDefault(x => char.ToUpper(x.Hotkey) == key || char.ToLower(x.Hotkey) == key);
             if (console == null) { return; }
 
-            var di = new DirectoryInfo(SelectedItem.FullPath);
+            var di = new DirectoryInfo(SelectedMatchedItem.FullPath);
             var drive = di.Root.Name.TrimEnd('\\');
 
             var args0 = console.Arguments.Replace("{DRIVE}", drive);
-            var args = string.Format(args0, SelectedItem.FullPath);
+            var args = string.Format(args0, SelectedMatchedItem.FullPath);
 
-            var psi = new ProcessStartInfo(string.Format(console.Target, SelectedItem.FullPath))
+            var psi = new ProcessStartInfo(string.Format(console.Target, SelectedMatchedItem.FullPath))
             {
                 Arguments = args,
                 UseShellExecute = false,
@@ -243,6 +291,22 @@ namespace DLab.ViewModels
             {
                 MessageBox.Show(e.Message);
                 _log.Error(e);
+            }
+        }
+    }
+
+    static class CancelExtension
+    {
+        public static IEnumerable<T> WithCancellation<T>(this IEnumerable<T> en, CancellationToken token)
+        {
+            var logger = LogManager.GetLogger("Default");
+
+            foreach (var item in en)
+            {
+//                logger.Debug("[WithCancellation]");
+
+                token.ThrowIfCancellationRequested();
+                yield return item;
             }
         }
     }

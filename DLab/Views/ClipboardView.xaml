@@ -43,8 +43,10 @@
                         <Setter Property="Background" Value="#2D2D30"></Setter>
                     </Trigger>
                     <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                        <Setter Property="Background" Value="#4D4D53"></Setter>
+                        <Setter Property="Background" Value="#323235"></Setter>
                     </Trigger>
+                    
+                    
                 </Style.Triggers>
             </Style>
 
@@ -52,10 +54,11 @@
 
         <TextBox Name="SearchText" DockPanel.Dock="Top" Height="20" 
                  Background="#2D2D30"
+                 FontSize="18" 
                  Foreground="BlanchedAlmond"
                  HorizontalAlignment="Stretch" 
                  PreviewKeyUp="SearchText_OnPreviewKeyUp" 
-                 Margin="5 0 5 0">
+                 Margin="10 3 10 0">
                 <TextBox.Style>
                     <Style TargetType="TextBox">
                         <Setter Property="BorderBrush" Value="DarkSlateGray"/>
