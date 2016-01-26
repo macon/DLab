@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Caliburn.Micro;
 using DLab.Domain;
@@ -75,8 +74,10 @@ namespace DLab.ViewModels
 
         private async void EnhanceWithIconAsync()
         {
+            var iconHelper = new IconHelper();
+
             var iconTasks = (from matchedItem in MatchedItems let item = matchedItem 
-                             select Task.Run(() => GetIcon(item))).ToList();
+                             select Task.Run(() => iconHelper.GetIcon(item, item.CommandModel.Target))).ToList();
 
             while (iconTasks.Count > 0)
             {
@@ -89,46 +90,40 @@ namespace DLab.ViewModels
             }
         }
 
-        private class ImageClass
-        {
-            public MatchResult Item { get; set; }
-            public ImageSource ImageSource { get; set; }
-        }
+//        private ImageClass<MatchResult> GetIcon(MatchResult matchedItem)
+//        {
+//            var result = new ImageClass<MatchResult> {Item = matchedItem};
+//            var icon = Win32.SafeExtractAssociatedIcon(matchedItem.CommandModel.Target);
+//            if (icon == null) return null;
+//
+//            result.ImageSource = Imaging.CreateBitmapSourceFromHIcon(
+//                        icon.Handle,
+//                        new Int32Rect(0,0,icon.Width, icon.Height),
+//                        BitmapSizeOptions.FromEmptyOptions());
+//            if (result.ImageSource.CanFreeze)
+//            {
+//                result.ImageSource.Freeze();
+//            }
+//            return result;
+//        }
 
-        private ImageClass GetIcon(MatchResult matchedItem)
-        {
-            var result = new ImageClass {Item = matchedItem};
-            var icon = SafeExtractAssociatedIcon(matchedItem);
-            if (icon == null) return null;
-
-            result.ImageSource = Imaging.CreateBitmapSourceFromHIcon(
-                        icon.Handle,
-                        new Int32Rect(0,0,icon.Width, icon.Height),
-                        BitmapSizeOptions.FromEmptyOptions());
-            if (result.ImageSource.CanFreeze)
-            {
-                result.ImageSource.Freeze();
-            }
-            return result;
-        }
-
-        private Icon SafeExtractAssociatedIcon(MatchResult matchedItem)
-        {
-            Icon icon = null;
-            try
-            {
-                icon = Icon.ExtractAssociatedIcon(matchedItem.CommandModel.Target);
-            }
-            catch (AccessViolationException e)
-            {
-                _log.Error(e);
-            }
-            catch (FileNotFoundException e)
-            {
-                _log.Error(e);
-            }
-            return icon;
-        }
+//        private Icon SafeExtractAssociatedIcon(string path)
+//        {
+//            Icon icon = null;
+//            try
+//            {
+//                icon = Icon.ExtractAssociatedIcon(path);
+//            }
+//            catch (AccessViolationException e)
+//            {
+//                _log.Error(e);
+//            }
+//            catch (FileNotFoundException e)
+//            {
+//                _log.Error(e);
+//            }
+//            return icon;
+//        }
 
         public MatchResult SelectedMatchedItem
         {

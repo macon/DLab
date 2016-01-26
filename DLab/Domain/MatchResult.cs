@@ -6,7 +6,12 @@ using Caliburn.Micro;
 
 namespace DLab.Domain
 {
-    public class MatchResult : Screen
+    public interface IIconable
+    {
+        ImageSource Icon { get; set; }
+    }
+
+    public class MatchResult : ViewAware, IIconable
     {
         private ImageSource _icon;
 

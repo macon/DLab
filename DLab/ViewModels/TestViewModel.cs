@@ -190,7 +190,7 @@ namespace DLab.ViewModels
             {
                 var orphaned = false;
 
-                for (var parentLevel = newMatches.Count - 2; parentLevel >= 0; parentLevel--)
+                for (var parentLevel = finalSet.Count - 2; parentLevel >= 0; parentLevel--)
                 {
                     token.ThrowIfCancellationRequested();
                     var possibleParents = finalSet[parentLevel].Matches;

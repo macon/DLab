@@ -27,6 +27,7 @@ namespace DLab.ViewModels
             {
                 _viewModelFactory.GetViewModel<CommandViewModel>(),
                 _viewModelFactory.GetViewModel<ClipboardViewModel>(),
+                _viewModelFactory.GetViewModel<ProcessViewModel>(),
                 _viewModelFactory.GetViewModel<TestViewModel>() as ITabViewModel
 //                _viewModelFactory.GetViewModel<HyperspaceViewModel>() as ITabViewModel
             });
@@ -36,6 +37,11 @@ namespace DLab.ViewModels
         public void ActivateCommandModel()
         {
             ActivateItem(Items.First(x => x is CommandViewModel));
+        }
+
+        public void ActivateProcessModel()
+        {
+            ActivateItem(Items.First(x => x is ProcessViewModel));
         }
 
         public void ActivateClipboardModel()

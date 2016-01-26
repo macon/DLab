@@ -130,6 +130,11 @@ namespace DLab.HyperJump
                     _log.Error($"Caught {nameof(PathTooLongException)} under {di.FullName}");
                     continue;
                 }
+                catch (IOException)
+                {
+                    _log.Error($"Caught {nameof(IOException)} under {di.FullName}");
+                    continue;
+                }
                 catch (UnauthorizedAccessException e)
                 {
                     _log.Error($"Caught {nameof(UnauthorizedAccessException)} under {di.FullName}");

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -8,6 +11,50 @@ namespace DLab.Infrastructure
 {
     internal static class Win32
     {
+        public delegate bool EnumWindowsProc(IntPtr windowHandle, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern int ShowWindow(IntPtr hWnd, uint Msg);
+
+        private const uint SW_RESTORE = 0x09;
+
+        public static void RestoreWindow(IntPtr hWnd)
+        {
+            ShowWindow(hWnd, SW_RESTORE);
+        }
+
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        public static extern bool PrintWindow(IntPtr hWnd, IntPtr hdcBlt, int nFlags);
+
+        [DllImport("user32")]
+        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        public static extern bool EnumChildWindows(IntPtr hWndStart, EnumWindowsProc callback, IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam, uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
+
+        public static Bitmap PrintWindow(IntPtr hwnd)
+        {
+            RECT rc;
+            GetWindowRect(hwnd, out rc);
+
+            var bmp = new Bitmap(rc.Width, rc.Height, PixelFormat.Format32bppArgb);
+            var gfxBmp = Graphics.FromImage(bmp);
+            var hdcBitmap = gfxBmp.GetHdc();
+
+            PrintWindow(hwnd, hdcBitmap, 0);
+
+            gfxBmp.ReleaseHdc(hdcBitmap);
+            gfxBmp.Dispose();
+
+            return bmp;
+        }
+        //----------------------
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool IsWindowVisible(IntPtr hWnd);
@@ -48,6 +95,24 @@ namespace DLab.Infrastructure
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool PostMessage(HandleRef hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        public static Icon SafeExtractAssociatedIcon(string path)
+        {
+            Icon icon = null;
+            try
+            {
+                icon = Icon.ExtractAssociatedIcon(path);
+            }
+            catch (AccessViolationException e)
+            {
+//                _log.Error(e);
+            }
+            catch (FileNotFoundException e)
+            {
+//                _log.Error(e);
+            }
+            return icon;
+        }
 
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]

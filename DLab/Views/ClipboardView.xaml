@@ -11,6 +11,7 @@
              behaviours:FocusBehavior.FocusFirst="true">
     <DockPanel Background="#2D2D30">
         
+        
         <DockPanel.Resources>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
             

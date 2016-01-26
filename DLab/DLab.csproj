@@ -120,6 +120,9 @@
     <Compile Include="Caliburn\Micro\Logging\DebugLogger.cs" />
     <Compile Include="Converters\ShortenPathConverter.cs" />
     <Compile Include="Domain\HyperjumpSpec.cs" />
+    <Compile Include="Infrastructure\IconHelper.cs" />
+    <Compile Include="Infrastructure\ImageClass.cs" />
+    <Compile Include="Infrastructure\RECT.cs" />
     <Compile Include="Repositories\BaseCollection.cs" />
     <Compile Include="Repositories\BaseRepo.cs" />
     <Compile Include="Domain\ClipboardItem.cs" />
@@ -164,6 +167,7 @@
     <Compile Include="Domain\Note.cs" />
     <Compile Include="ViewModels\NotesViewModel.cs" />
     <Compile Include="ViewModels\NoteViewModel.cs" />
+    <Compile Include="ViewModels\ProcessViewModel.cs" />
     <Compile Include="ViewModels\RunnerSpecViewModel.cs" />
     <Compile Include="ViewModels\SettingsDirViewModel.cs" />
     <Compile Include="ViewModels\SettingsFolderViewModel.cs" />
@@ -204,6 +208,9 @@
     </Compile>
     <Compile Include="Views\NoteView.xaml.cs">
       <DependentUpon>NoteView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ProcessView.xaml.cs">
+      <DependentUpon>ProcessView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SettingsDirView.xaml.cs">
       <DependentUpon>SettingsDirView.xaml</DependentUpon>
@@ -283,6 +290,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\NoteView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ProcessView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

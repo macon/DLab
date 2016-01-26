@@ -68,6 +68,7 @@ namespace DLab
                 x.For<IViewModelFactory>().Use<ViewModelFactory>();
                 x.For<SettingsViewModel>().Use<SettingsViewModel>();
                 x.For<CommandViewModel>().Use<CommandViewModel>().Singleton();
+                x.For<ProcessViewModel>().Use<ProcessViewModel>().Singleton();
                 x.For<TabViewModel>().Use<TabViewModel>();
                 x.For<ClipboardViewModel>().Use<ClipboardViewModel>().Singleton();
                 x.For<HyperspaceViewModel>().Use<HyperspaceViewModel>().Singleton();

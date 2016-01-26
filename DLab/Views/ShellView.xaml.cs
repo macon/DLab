@@ -26,6 +26,7 @@ namespace DLab.Views
     {
         private HotKeyHost _hotKeyHost;
         private HotKey _showCommandHotKey;
+        private HotKey _showProcessHotKey;
         private CustomHotKey _showClipboardHotKey;
         private CustomHotKey _showSettingsHotKey;
         private CustomHotKey _showDirHotKey;
@@ -52,6 +53,7 @@ namespace DLab.Views
             Loaded += ShellView_Loaded;
 //            Application.Current.Deactivated += Current_Deactivated;
             _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Alt, true, SetFocusToCommand);
+            _showProcessHotKey = new CustomHotKey("_showProcessHotKey", Key.Tab, ModifierKeys.Control, true, SetFocusToProcess);
             _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Alt, true, SetFocusToClipboard);
             _showSettingsHotKey = new CustomHotKey("_showSettingsHotKey", Key.S, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToSettings);
             _showDirHotKey = new CustomHotKey("_showDirHotKey", Key.D, ModifierKeys.Control | ModifierKeys.Alt, true, SetFocusToTest);
@@ -105,6 +107,7 @@ namespace DLab.Views
             Loaded -= ShellView_Loaded;
             Application.Current.Deactivated -= Current_Deactivated;
             _hotKeyHost.RemoveHotKey(_showCommandHotKey);
+            _hotKeyHost.RemoveHotKey(_showProcessHotKey);
             _hotKeyHost.RemoveHotKey(_showClipboardHotKey);
 //            _hotKeyHost.RemoveHotKey(_showSettingsHotKey);
             _hotKeyHost.RemoveHotKey(_showDirHotKey);
@@ -122,11 +125,11 @@ namespace DLab.Views
             SetFocusToCommand();
         }
 
-
         private void InitialiseHotKey(Window window)
         {
             _hotKeyHost = new HotKeyHost(window);
             _hotKeyHost.AddHotKey(_showCommandHotKey);
+            _hotKeyHost.AddHotKey(_showProcessHotKey);
             _hotKeyHost.AddHotKey(_showClipboardHotKey);
             _hotKeyHost.AddHotKey(_showDirHotKey);
 //            _hotKeyHost.AddHotKey(_showSettingsHotKey);
@@ -138,6 +141,21 @@ namespace DLab.Views
             SetFocus(() =>
             {
                 var view = ActiveItem.Content as CommandView;
+                var child = view.UserCommand;
+                child.Text = "";
+                child.Focus();
+                Keyboard.Focus(child);
+            });
+        }
+
+        private void SetFocusToProcess()
+        {
+            ClientHwnd = GetPreviousWindow();
+
+            _vm.ActivateProcessModel();
+            SetFocus(() =>
+            {
+                var view = ActiveItem.Content as ProcessView;
                 var child = view.UserCommand;
                 child.Text = "";
                 child.Focus();

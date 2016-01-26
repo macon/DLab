@@ -9,7 +9,7 @@
         BorderBrush="#007ACC"
         BorderThickness="1"
         Height="350" 
-        MinWidth="525" 
+        MinWidth="400" 
         Background="#2D2D30"
         ShowInTaskbar="False" >
 <!--    SizeToContent="Width"-->
