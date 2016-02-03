@@ -51,7 +51,7 @@ namespace DLab
         public CaliburnMicroBootstrapper()
         {
             StartRuntime();
-            Caliburn.Micro.LogManager.GetLog = t => new CaliburnLogger(t);
+//            Caliburn.Micro.LogManager.GetLog = t => new CaliburnLogger(t);
         }
 
         protected override void OnStartup(object sender, StartupEventArgs e)

@@ -51,7 +51,7 @@ namespace DLab.Views
         private void InitializeApp()
         {
             Loaded += ShellView_Loaded;
-//            Application.Current.Deactivated += Current_Deactivated;
+            Application.Current.Deactivated += Current_Deactivated;
             _showCommandHotKey = new CustomHotKey("_showCommandHotKey", Key.Space, ModifierKeys.Alt, true, SetFocusToCommand);
             _showProcessHotKey = new CustomHotKey("_showProcessHotKey", Key.Tab, ModifierKeys.Control, true, SetFocusToProcess);
             _showClipboardHotKey = new CustomHotKey("_showClipboardHotKey", Key.C, ModifierKeys.Alt, true, SetFocusToClipboard);
@@ -151,15 +151,36 @@ namespace DLab.Views
         private void SetFocusToProcess()
         {
             ClientHwnd = GetPreviousWindow();
-
             _vm.ActivateProcessModel();
+
             SetFocus(() =>
             {
                 var view = ActiveItem.Content as ProcessView;
-                var child = view.UserCommand;
-                child.Text = "";
-                child.Focus();
-                Keyboard.Focus(child);
+                if (view == null) { return; }
+
+                var processItems = view.ProcessNames;
+                processItems.Focus();
+
+                view.UserCommand.Text = "";
+                if (processItems.Items.Count == 0) return;
+                processItems.SelectedIndex = 1;
+                processItems.UpdateLayout();
+
+                var processItem = (ListBoxItem) processItems.ItemContainerGenerator.ContainerFromItem(processItems.SelectedItem);
+                if (processItem == null)
+                {
+                    _logger.WarnFormat("Failed to get SelectedItem from ProcessNames {0}", processItems.SelectedItem);
+                    return;
+                }
+                processItem.Focus();
+                _logger.Debug("Setting focus to first processItem");
+
+//                Keyboard.Focus(processItem);
+//
+//                var child = view.UserCommand;
+//                child.Text = "";
+//                child.Focus();
+//                Keyboard.Focus(child);
             });
         }
 
@@ -227,17 +248,16 @@ namespace DLab.Views
             Activate();
             Application.Current.MainWindow.Visibility = Visibility.Visible;
 
-//            var view = ActiveViewModel.Content as TabView;
+//                        Application.Current.Dispatcher.BeginInvoke(
+//                            (Action)delegate
+//                                  {
+//                                      Application.Current.Dispatcher.BeginInvoke
+//                                                (focusCommand, DispatcherPriority.Normal, null);
+//            
+//                                  }, DispatcherPriority.Normal, null);
 
-            Application.Current.Dispatcher.BeginInvoke(
-                (Action)delegate
-                      {
-//                          view.Items.SelectedIndex = tabIndex;
-
-                          Application.Current.Dispatcher.BeginInvoke
-                                    (focusCommand, DispatcherPriority.Render, null);
-
-                      }, DispatcherPriority.Render, null);
+            Application.Current.Dispatcher.BeginInvoke
+                      (focusCommand, DispatcherPriority.Render, null);
         }
 
         //---------------------------------------------------------

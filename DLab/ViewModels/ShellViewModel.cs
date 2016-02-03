@@ -3,6 +3,8 @@ using System.Linq;
 using Caliburn.Micro;
 using DLab.Events;
 using StructureMap;
+using ILog = log4net.ILog;
+using LogManager = log4net.LogManager;
 
 namespace DLab.ViewModels
 {
@@ -14,6 +16,7 @@ namespace DLab.ViewModels
         private bool _isHidden;
         private SettingsViewModel _settingViewModel;
         private bool _isBusy;
+        private ILog _logger;
 //        public Screen ActiveViewModel => ActiveItem as Screen;
 
         public ShellViewModel(IWindowManager windowManager, IEventAggregator eventAggregator, IViewModelFactory viewModelFactory)
@@ -22,6 +25,7 @@ namespace DLab.ViewModels
             _eventAggregator = eventAggregator;
             _viewModelFactory = viewModelFactory;
             _eventAggregator.Subscribe(this);
+            _logger = LogManager.GetLogger("ShellView");
 
             Items.AddRange(new []
             {
@@ -34,6 +38,17 @@ namespace DLab.ViewModels
             ActivateCommandModel();
         }
 
+//        protected override async void OnActivationProcessed(ITabViewModel item, bool success)
+//        {
+//            base.OnActivationProcessed(item, success);
+//            if (!success) { return; }
+//
+//            var processViewModel = item as ProcessViewModel;
+//            if (processViewModel == null) { return; }
+//
+//            await processViewModel.InitialiseProcessListAsync();
+//        }
+
         public void ActivateCommandModel()
         {
             ActivateItem(Items.First(x => x is CommandViewModel));
@@ -41,7 +56,12 @@ namespace DLab.ViewModels
 
         public void ActivateProcessModel()
         {
-            ActivateItem(Items.First(x => x is ProcessViewModel));
+            var processViewModel = (ProcessViewModel) Items.Single(x => x is ProcessViewModel);
+            ActivateItem(processViewModel);
+#pragma warning disable 4014
+            processViewModel.InitialiseProcessListAsync();
+#pragma warning restore 4014
+            _logger.Debug("ActivateProcessModel: Finished");
         }
 
         public void ActivateClipboardModel()

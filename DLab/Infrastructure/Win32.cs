@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -17,10 +18,16 @@ namespace DLab.Infrastructure
         public static extern int ShowWindow(IntPtr hWnd, uint Msg);
 
         private const uint SW_RESTORE = 0x09;
+        private const uint SW_SHOW = 0x05;
+
 
         public static void RestoreWindow(IntPtr hWnd)
         {
             ShowWindow(hWnd, SW_RESTORE);
+        }
+        public static void ShowWindow(IntPtr hWnd)
+        {
+            ShowWindow(hWnd, SW_SHOW);
         }
 
         [DllImport("user32.dll")]
@@ -114,6 +121,37 @@ namespace DLab.Infrastructure
             return icon;
         }
 
+        public static Dictionary<int, IntPtr> GetWindowsByZOrder()
+        {
+            var windowList = new Dictionary<int, IntPtr>();
+            var topWindow = GetTopWindow(IntPtr.Zero);
+            var index = 0;
+            windowList.Add(index, topWindow);
+            var nextWindow = GetWindow(topWindow, (uint) GetWindowCmd.GW_HWNDNEXT);
+            while (nextWindow != IntPtr.Zero)
+            {
+                windowList.Add(++index, nextWindow);
+                nextWindow = GetWindow(nextWindow, (uint)GetWindowCmd.GW_HWNDNEXT);
+            }
+            return windowList;
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        public enum GetWindowCmd : uint
+        {
+            GW_HWNDFIRST = 0U,
+            GW_HWNDLAST = 1U,
+            GW_HWNDNEXT = 2U,
+            GW_HWNDPREV = 3U,
+            GW_OWNER = 4U,
+            GW_CHILD = 5U,
+            GW_ENABLEDPOPUP = 6U
+        }
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetTopWindow(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern IntPtr SetClipboardViewer(IntPtr hWndNewViewer);
@@ -135,6 +173,10 @@ namespace DLab.Infrastructure
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool BringWindowToTop(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
 
         /// <summary>
         /// Synthesizes keystrokes, mouse motions, and button clicks.
@@ -164,7 +206,35 @@ namespace DLab.Infrastructure
             var sb = new StringBuilder(length + 1);
             GetWindowText(hWnd, sb, sb.Capacity);
             return sb.ToString();
-        } 
+        }
+
+        public static WINDOWPLACEMENT GetPlacement(IntPtr hwnd)
+        {
+            WINDOWPLACEMENT placement = new WINDOWPLACEMENT();
+            placement.length = Marshal.SizeOf(placement);
+            GetWindowPlacement(hwnd, ref placement);
+            return placement;
+        }
+
+        [Serializable]
+        [StructLayout(LayoutKind.Sequential)]
+        public struct WINDOWPLACEMENT
+        {
+            public int length;
+            public int flags;
+            public WindowState WindowState;
+            public System.Drawing.Point ptMinPosition;
+            public System.Drawing.Point ptMaxPosition;
+            public Rectangle rcNormalPosition;
+        }
+
+        public enum WindowState
+        {
+            Hide = 0,
+            Normal = 1,
+            Minimized = 2,
+            Maximized = 3,
+        }
 
         [StructLayout(LayoutKind.Explicit)]
         internal struct InputUnion

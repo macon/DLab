@@ -10,8 +10,6 @@
              d:DesignHeight="300" d:DesignWidth="300"
              behaviours:FocusBehavior.FocusFirst="true">
     <DockPanel Background="#2D2D30">
-        
-        
         <DockPanel.Resources>
             <converters:BoolToHiddenConverter x:Key="BoolToHiddenConverter"/>
             
@@ -30,6 +28,7 @@
                     <Label Content="{Binding DisplayText}" ToolTip="{Binding Text}" Foreground="BlanchedAlmond" FontSize="12" Padding="0 0 0 0" ></Label>
                 </DockPanel>
             </DataTemplate>
+            
 
             <DataTemplate x:Key="ClipboardItemImageTemplate">
                 <DockPanel cal:View.Model="{Binding}" HorizontalAlignment="Left">

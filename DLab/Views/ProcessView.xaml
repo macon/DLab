@@ -24,6 +24,15 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
+            
+            <Style TargetType="{x:Type TextBlock}" x:Key="ItemStyle">
+                <Setter Property="Foreground" Value="BlanchedAlmond"></Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Foreground" Value="Gray"></Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
         </DockPanel.Resources>
 
         <DockPanel DockPanel.Dock="Top">
@@ -37,7 +46,7 @@
                          Margin="10 3 10 0"
                          Text="{Binding UserCommand, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
                          HorizontalContentAlignment="Stretch"
-                         TabIndex="0" Height="25">
+                         Height="25">
                 <TextBox.Style>
                     <Style TargetType="TextBox">
                         <Setter Property="BorderBrush" Value="DarkSlateGray"/>
@@ -56,10 +65,10 @@
 
         <ListBox 
             Name="ProcessNames" 
+            SelectionMode="Extended"
             VerticalAlignment="Stretch" 
             ScrollViewer.HorizontalScrollBarVisibility="Hidden" 
             PreviewTextInput="ProcessNames_OnPreviewTextInput" 
-            TabIndex="1" 
             Margin="10 0 10 5"
             Background="#2D2D30" 
             BorderThickness="0">
@@ -68,12 +77,19 @@
                     <DockPanel cal:View.Model="{Binding}">
                         <Image Margin="2" DockPanel.Dock="Left" Source="{Binding Icon}"/>
                         <StackPanel ToolTip="{Binding Path=Title}">
-                            <TextBlock Text="{Binding Path=Name}" Foreground="BlanchedAlmond"></TextBlock>
-                            <TextBlock Text="{Binding Path=Title, Converter={StaticResource Shortener}}" Margin="10 0 0 0" Foreground="DarkGray"></TextBlock>
+                            <TextBlock Text="{Binding Path=Name}" Style="{StaticResource ItemStyle}" ></TextBlock>
+                            <TextBlock Text="{Binding Path=Title, Converter={StaticResource Shortener}}"  Margin="10 0 0 0" Foreground="DarkGray"></TextBlock>
                         </StackPanel>
                     </DockPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
+
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="IsSelected" Value="{Binding Mode=TwoWay, Path=IsSelected}"/>
+                    <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+                </Style>
+            </ListBox.ItemContainerStyle>
         </ListBox>
     </DockPanel>
 
