@@ -1,0 +1,9 @@
+﻿{
+  "name": "com.macon.dlab.tabit",
+  "description": "DLab/Chrome interface",
+  "path": "DLab.Chrome.MessagingHost.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://ipcjliddkfhfoelefkmaopddodcpoccd/"
+  ]
+}

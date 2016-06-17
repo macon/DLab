@@ -163,37 +163,48 @@ namespace DLab.ViewModels
         {
 	        try
 	        {
-	            var clipData = Clipboard.GetDataObject();
-	            if (clipData == null) { return null;}
+                _logger.Debug("dbg #1");
+                var clipData = Clipboard.GetDataObject();
+                _logger.Debug("dbg #2");
+                if (clipData == null) { return null;}
 
-	            if (clipData.GetDataPresent(DataFormats.Text))
+                _logger.Debug("dbg #3");
+                if (clipData.GetDataPresent(DataFormats.Text))
 	            {
-	                var clipboardText = (string)clipData.GetData(DataFormats.Text, true);
+                    _logger.Debug("dbg #4");
+                    var clipboardText = (string)clipData.GetData(DataFormats.Text, true);
 	                return ClipboardItemViewModel.ByText(clipboardText);
 	            }
 
-	            if (clipData.GetDataPresent(DataFormats.FileDrop))
+                _logger.Debug("dbg #5");
+                if (clipData.GetDataPresent(DataFormats.FileDrop))
 	            {
-	                var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
+                    _logger.Debug("dbg #6");
+                    var collection = (string[])clipData.GetData(DataFormats.FileDrop, true);
 	                return ClipboardItemViewModel.ByFileDropList(collection);
 	            }
 
-	            if (Clipboard.ContainsImage())
+                _logger.Debug("dbg #7");
+                if (Clipboard.ContainsImage())
 	            {
-	                var bmi = Clipboard.GetImage();
+                    _logger.Debug("dbg #8");
+                    var bmi = Clipboard.GetImage();
 	                return ClipboardItemViewModel.ByImage(bmi);
 	            }
-	            return null;
+                _logger.Debug("dbg #9");
+                return null;
 	        }
-	        catch (COMException)
+	        catch (COMException exception)
 	        {
-	            var formats = Clipboard.GetDataObject().GetFormats();
-                _logger.Debug($"Caught {nameof(COMException)}, dumping formats on clipboard...");
+                _logger.Error($"Caught {nameof(COMException)}.", exception);
+                var formats = Clipboard.GetDataObject().GetFormats();
+
+                _logger.Debug($"Dumping formats in clipboard...");
 	            foreach (var format in formats)
 	            {
 	                _logger.Debug($"{format}");
 	            }
-	            throw;
+	            return null;
 	        }
         }
 

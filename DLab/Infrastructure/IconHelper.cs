@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using DLab.Domain;
-using DLab.ViewModels;
 
 namespace DLab.Infrastructure
 {
+    // TODO: create image cache
     public class IconHelper
     {
         public ImageClass<T> GetIcon<T>(T iconable, string path) where T: IIconable

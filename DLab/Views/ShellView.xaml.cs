@@ -194,6 +194,7 @@ namespace DLab.Views
                 var view = ActiveItem.Content as ClipboardView;
                 var clipboardItems = view.ClipboardItems;
 
+                view.SearchText.Text = "";
                 clipboardItems.Focus();
 
                 if (clipboardItems.Items.Count == 0) return;

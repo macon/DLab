@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using DLab.ViewModels;
 using log4net;
 
 namespace DLab.Infrastructure
@@ -94,6 +96,20 @@ namespace DLab.Infrastructure
         internal const int WM_USER = 0x0400;
         internal const int WM_USER_CLIPBOARD_CONTROL = WM_USER + 1;
         internal const int WM_PASTE = 0x0302;
+
+        public enum WM : uint
+        {
+            /// <summary>
+            /// An application sends a WM_GETTEXT message to copy the text that corresponds to a window into a buffer provided by the caller. 
+            /// </summary>
+            GETTEXT = 0x000D,
+
+            /// <summary>
+            /// An application sends a WM_GETTEXTLENGTH message to determine the length, in characters, of the text associated with a window. 
+            /// </summary>
+            GETTEXTLENGTH = 0x000E
+        }
+
         /// <summary>
         /// A clipboard viewer window receives the WM_CHANGECBCHAIN message when 
         /// another window is removing itself from the clipboard viewer chain.
@@ -136,6 +152,12 @@ namespace DLab.Infrastructure
             return windowList;
         }
 
+        [DllImport("user32.dll", ExactSpelling = true, CharSet = CharSet.Auto)]
+        public static extern IntPtr GetParent(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
 
@@ -159,8 +181,20 @@ namespace DLab.Infrastructure
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool ChangeClipboardChain(IntPtr hWndRemove, IntPtr hWndNewNext);
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        internal static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, [MarshalAs(UnmanagedType.LPStr)] string lParam);
+//        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+//        internal static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, [MarshalAs(UnmanagedType.LPStr)] string lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        internal static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, [Out] StringBuilder lParam);
+
+        public static string GetWindowTextRaw(IntPtr hwnd)
+        {
+            // Allocate correct string length first
+            var length = (int)SendMessage(hwnd, (uint)WM.GETTEXTLENGTH, IntPtr.Zero, null);
+            var sb = new StringBuilder(length + 1);
+            SendMessage(hwnd, (uint) WM.GETTEXT, (IntPtr)sb.Capacity, sb);
+            return sb.ToString();
+        }
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetForegroundWindow();
@@ -178,6 +212,29 @@ namespace DLab.Infrastructure
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
 
+        [DllImport("user32.dll", EntryPoint= "GetWindowLong")]
+        private static extern IntPtr GetWindowLongPtr32(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
+        private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
+
+        // This static method is required because Win32 does not support GetWindowLongPtr directly
+        public static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+        {
+            return IntPtr.Size == 8 ? GetWindowLongPtr64(hWnd, nIndex) : GetWindowLongPtr32(hWnd, nIndex);
+        }
+
+        public enum GWL
+        {
+            GWL_WNDPROC = (-4),
+            GWL_HINSTANCE = (-6),
+            GWL_HWNDPARENT = (-8),
+            GWL_STYLE = (-16),
+            GWL_EXSTYLE = (-20),
+            GWL_USERDATA = (-21),
+            GWL_ID = (-12)
+        }
+
         /// <summary>
         /// Synthesizes keystrokes, mouse motions, and button clicks.
         /// </summary>
@@ -186,6 +243,30 @@ namespace DLab.Infrastructure
            [MarshalAs(UnmanagedType.LPArray), In] INPUT[] pInputs,
            int cbSize);
 
+        delegate bool EnumThreadDelegate(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern bool EnumThreadWindows(int dwThreadId, EnumThreadDelegate lpfn,
+            IntPtr lParam);
+
+        public static IEnumerable<IntPtr> EnumerateProcessWindowHandles(int processId)
+        {
+            var handles = new List<IntPtr>();
+
+            foreach (ProcessThread thread in Process.GetProcessById(processId).Threads)
+            {
+                Debug.WriteLine($"enumerating windows for threadid:{thread.Id.ToHex()}");
+                EnumThreadWindows(thread.Id,
+                    (hWnd, lParam) =>
+                    {
+                        Debug.WriteLine($"\tfound hWnd:{hWnd.ToHex()}");
+                        handles.Add(hWnd);
+                        return true;
+                    }, IntPtr.Zero);
+            }
+
+            return handles;
+        }
         public static uint INPUT_KEYBOARD = 1;
 
         [StructLayout(LayoutKind.Sequential)]
@@ -1201,5 +1282,78 @@ namespace DLab.Infrastructure
             ip.U.ki.dwFlags = KEYEVENTF.KEYUP;
             SendInput(1, new[] { ip }, INPUT.Size);
         }
+
+        public enum WindowLongFlags
+        {
+            GWL_EXSTYLE = -20,
+            GWLP_HINSTANCE = -6,
+            GWLP_HWNDPARENT = -8,
+            GWL_ID = -12,
+            GWL_STYLE = -16,
+            GWL_USERDATA = -21,
+            GWL_WNDPROC = -4,
+            DWLP_USER = 0x8,
+            DWLP_MSGRESULT = 0x0,
+            DWLP_DLGPROC = 0x4
+        }
+
+        const int GWL_HWNDPARENT = (-8);
+
+//GWL_ID = (-12)
+//GWL_STYLE = (-16)
+//GWL_EXSTYLE = (-20)
+
+        // Window Styles 
+        public const UInt32 WS_OVERLAPPED = 0;
+        public const UInt32 WS_POPUP = 0x80000000;
+        public const UInt32 WS_CHILD = 0x40000000;
+        public const UInt32 WS_MINIMIZE = 0x20000000;
+        public static IntPtr WS_VISIBLE = new IntPtr(0x10000000);
+        public const UInt32 WS_DISABLED = 0x8000000;
+        public const UInt32 WS_CLIPSIBLINGS = 0x4000000;
+        public const UInt32 WS_CLIPCHILDREN = 0x2000000;
+        public const UInt32 WS_MAXIMIZE = 0x1000000;
+        public const UInt32 WS_CAPTION = 0xC00000;      // WS_BORDER or WS_DLGFRAME  
+        public const UInt32 WS_BORDER = 0x800000;
+        public const UInt32 WS_DLGFRAME = 0x400000;
+        public const UInt32 WS_VSCROLL = 0x200000;
+        public const UInt32 WS_HSCROLL = 0x100000;
+        public const UInt32 WS_SYSMENU = 0x80000;
+        public const UInt32 WS_THICKFRAME = 0x40000;
+        public const UInt32 WS_GROUP = 0x20000;
+        public const UInt32 WS_TABSTOP = 0x10000;
+        public const UInt32 WS_MINIMIZEBOX = 0x20000;
+        public const UInt32 WS_MAXIMIZEBOX = 0x10000;
+        public const UInt32 WS_TILED = WS_OVERLAPPED;
+        public const UInt32 WS_ICONIC = WS_MINIMIZE;
+        public const UInt32 WS_SIZEBOX = WS_THICKFRAME;
+
+        // Extended Window Styles 
+        public const UInt32 WS_EX_DLGMODALFRAME = 0x0001;
+        public const UInt32 WS_EX_NOPARENTNOTIFY = 0x0004;
+        public const UInt32 WS_EX_TOPMOST = 0x0008;
+        public const UInt32 WS_EX_ACCEPTFILES = 0x0010;
+        public const UInt32 WS_EX_TRANSPARENT = 0x0020;
+        public const UInt32 WS_EX_MDICHILD = 0x0040;
+        public const UInt32 WS_EX_TOOLWINDOW = 0x0080;
+        public const UInt32 WS_EX_WINDOWEDGE = 0x0100;
+        public const UInt32 WS_EX_CLIENTEDGE = 0x0200;
+        public const UInt32 WS_EX_CONTEXTHELP = 0x0400;
+        public const UInt32 WS_EX_RIGHT = 0x1000;
+        public const UInt32 WS_EX_LEFT = 0x0000;
+        public const UInt32 WS_EX_RTLREADING = 0x2000;
+        public const UInt32 WS_EX_LTRREADING = 0x0000;
+        public const UInt32 WS_EX_LEFTSCROLLBAR = 0x4000;
+        public const UInt32 WS_EX_RIGHTSCROLLBAR = 0x0000;
+        public const UInt32 WS_EX_CONTROLPARENT = 0x10000;
+        public const UInt32 WS_EX_STATICEDGE = 0x20000;
+        public const UInt32 WS_EX_APPWINDOW = 0x40000;
+        public const UInt32 WS_EX_OVERLAPPEDWINDOW = (WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE);
+        public const UInt32 WS_EX_PALETTEWINDOW = (WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW | WS_EX_TOPMOST);
+        public const UInt32 WS_EX_LAYERED = 0x00080000;
+        public const UInt32 WS_EX_NOINHERITLAYOUT = 0x00100000; // Disable inheritence of mirroring by children
+        public const UInt32 WS_EX_LAYOUTRTL = 0x00400000; // Right to left mirroring
+        public const UInt32 WS_EX_COMPOSITED = 0x02000000;
+        public const UInt32 WS_EX_NOACTIVATE = 0x08000000;
     }
 }

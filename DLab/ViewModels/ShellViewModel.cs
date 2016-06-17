@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Caliburn.Micro;
 using DLab.Events;
@@ -59,7 +60,16 @@ namespace DLab.ViewModels
             var processViewModel = (ProcessViewModel) Items.Single(x => x is ProcessViewModel);
             ActivateItem(processViewModel);
 #pragma warning disable 4014
-            processViewModel.InitialiseProcessListAsync();
+            try
+            {
+                processViewModel.InitialiseProcessListAsync();
+            }
+            catch (Exception e)
+            {
+                var logger = LogManager.GetLogger("ShellView");
+                logger.Error(e);
+//                throw;
+            }
 #pragma warning restore 4014
             _logger.Debug("ActivateProcessModel: Finished");
         }
