@@ -258,7 +258,14 @@ namespace DLab.ViewModels
 
             foreach (var processItem in _processList)
             {
-                var currentProcessItem = currentProcessList.First(x => x.Id == processItem.Id && x.WindowHandle == processItem.WindowHandle);
+                var currentProcessItem = currentProcessList.FirstOrDefault(x => x.Id == processItem.Id && x.WindowHandle == processItem.WindowHandle);
+
+                if (currentProcessItem == null)
+                {
+                    Debug.WriteLine($"Could not find currentProcessItem for: {processItem}");
+                    continue;
+                }
+
                 processItem.Title = currentProcessItem.Title;
                 processItem.ZOrder = currentProcessItem.ZOrder;
                 processItem.IsEnabled = true;
@@ -543,6 +550,11 @@ namespace DLab.ViewModels
                 _isEnabled = value;
                 NotifyOfPropertyChange();
             }
+        }
+
+        public override string ToString()
+        {
+            return $"Title: {Title}, Name: {Name}, WindowHandle: {WindowHandle}, Id: {Id}, Category: {Category}, InternalId: {InternalId}, IsMainWindow: {IsMainWindow}";
         }
 
         public bool IsSelected
