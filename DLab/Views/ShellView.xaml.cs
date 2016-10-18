@@ -224,6 +224,7 @@ namespace DLab.Views
             {
                 _vm.ActivateHyperspaceModel();
                 var view = ActiveItem.Content as HyperspaceView;
+
 //                var child = view.UserCommand;
 //                child.Text = "";
 //                child.Focus();
@@ -237,10 +238,13 @@ namespace DLab.Views
             SetFocus(() =>
             {
                 var view = ActiveItem.Content as TestView;
-                var child = view.UserCommand;
-//                child.Text = "";
-                child.Focus();
-                Keyboard.Focus(child);
+                if (view != null)
+                {
+                    var child = view.UserCommand;
+                    child.Text = "";
+                    child.Focus();
+                    Keyboard.Focus(child);
+                }
             });
         }
 

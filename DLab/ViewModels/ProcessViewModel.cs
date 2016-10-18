@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Deployment.Internal;
 using System.Diagnostics;
 using System.Drawing.Text;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Windows.Media;
@@ -17,6 +20,7 @@ using DLab.Domain;
 using DLab.Infrastructure;
 using DLab.Views;
 using Newtonsoft.Json;
+using Console = System.Console;
 using ILog = log4net.ILog;
 using LogManager = log4net.LogManager;
 
@@ -52,6 +56,33 @@ namespace DLab.ViewModels
             _logger = LogManager.GetLogger("ShellView");
             ProcessNames = new BindableCollection<ProcessItem>();
             _pid = Process.GetCurrentProcess().Id;
+
+            _chromeTabs = new List<ProcessItem>();
+            _processList = new List<ProcessItem>();
+
+            _mainCancellationTokenSource = new CancellationTokenSource();
+            Task.Run(() => StartChromeTabListenerAsync(_mainCancellationTokenSource.Token));
+        }
+
+        private async Task StartChromeTabListenerAsync(CancellationToken token)
+        {
+            await InitialiseProcessListAsync();
+            while (!token.IsCancellationRequested)
+            {
+                await Task.Delay(5000, token);
+                UpdateChromeTabsAsync(token);
+            }
+        }
+
+        private void UpdateChromeTabsAsync(CancellationToken token)
+        {
+
+            var chromeTabs = GetChromeTabsAsync(token).Result;
+            lock (_gate)
+            {
+                _chromeTabs.Clear();
+                _chromeTabs.AddRange(chromeTabs);
+            }
         }
 
         public string UserCommand
@@ -89,20 +120,22 @@ namespace DLab.ViewModels
                 {
                     SelectedProcessName = ProcessNames[1];
                 }
-                EnhanceWithIconAsync();
+
+                Task.Run(() => EnhanceWithIconAsync(_mainCancellationTokenSource.Token), _mainCancellationTokenSource.Token);
             }
         }
 
-        private async Task EnhanceWithIconAsync()
+        private async Task EnhanceWithIconAsync(CancellationToken token)
         {
-            var i = new IconHelper();
+            var iconHelper = new IconHelper();
 
             var iconTasks = (from processItem in ProcessNames
                              let item = processItem
-                             select Task.Run(() => i.GetIcon(item, item.Path))).ToList();
+                             select Task.Run(() => iconHelper.GetIcon(item, item.Path), token)).ToList();
 
             while (iconTasks.Count > 0)
             {
+                token.ThrowIfCancellationRequested();
                 var task = await Task.WhenAny(iconTasks);
                 iconTasks.Remove(task);
 
@@ -116,7 +149,7 @@ namespace DLab.ViewModels
         {
             ProcessNames.Clear();
             ProcessNames.AddRange(_processList.OrderBy(x => x.ZOrder));
-            EnhanceWithIconAsync();
+            Task.Run(() => EnhanceWithIconAsync(_mainCancellationTokenSource.Token), _mainCancellationTokenSource.Token);
         }
 
         public void RunCommand()
@@ -178,7 +211,7 @@ namespace DLab.ViewModels
             }
         }
 
-        public async void InitialiseProcessListAsync()
+        public async Task InitialiseProcessListAsync()
         {
             var winList = Win32.GetWindowsByZOrder();
 
@@ -215,11 +248,24 @@ namespace DLab.ViewModels
                 currentProcessItem.IsEnabled = false;
             }
 
-            await AddChromeTabs(_processList).ConfigureAwait(true);
-            
+            //            await AddChromeTabs(_processList).ConfigureAwait(true);
+            lock (_gate)
+            {
+                if (_chromeTabs.Any())
+                {
+                    _processList.AddRange(_chromeTabs);
+                }
+            }
+
             ProcessNames.Clear();
             ProcessNames.AddRange(_processList.OrderBy(x => x.ZOrder));
-            await EnhanceWithIconAsync();
+            await EnhanceWithIconAsync(_mainCancellationTokenSource.Token);
+        }
+
+        protected override void OnDeactivate(bool close)
+        {
+            _mainCancellationTokenSource.Cancel();
+            base.OnDeactivate(close);
         }
 
         private async Task AddChromeTabs(List<ProcessItem> processList)
@@ -245,6 +291,46 @@ namespace DLab.ViewModels
                 processList.AddRange(
                     jsonObj.Tabs.Select(tabInfo => 
                         ProcessItem.AddChromeTab(chromeProcess.Id, int.Parse(tabInfo.Id), tabInfo.Title, tabInfo.Url, chromeProcess.WindowHandle, chromeProcess.Path, chromeProcess.LastUsed)));
+            }
+        }
+
+        private readonly object _gate = new object();
+
+        private async Task<IEnumerable<ProcessItem>> GetChromeTabsAsync(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            var chromeProcess = _processList.FirstOrDefault(x => x.Name.Equals("chrome", StringComparison.OrdinalIgnoreCase) && x.IsMainWindow);
+            if (chromeProcess == null) { return Enumerable.Empty<ProcessItem>(); }
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.BaseAddress = new Uri("http://localhost:9000");
+                httpClient.DefaultRequestHeaders.Accept.Clear();
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                HttpResponseMessage response;
+                try
+                {
+                    response = await httpClient.GetAsync("gettabinfo", new CancellationTokenSource(1000).Token);
+                }
+                catch (OperationCanceledException e)
+                {
+                    _logger.Warn("Timeout calling http gettabinfo");
+                    return Enumerable.Empty<ProcessItem>();
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.Warn($"Failed calling HTTP gettabinfo: {response.StatusCode}");
+                    return Enumerable.Empty<ProcessItem>();
+                }
+
+                var jsonString = await response.Content.ReadAsStringAsync();
+                var jsonObj = JsonConvert.DeserializeObject<ChromeTabs>(jsonString);
+
+                return 
+                    jsonObj.Tabs.Select(tabInfo =>
+                        ProcessItem.AddChromeTab(chromeProcess.Id, int.Parse(tabInfo.Id), tabInfo.Title, tabInfo.Url, chromeProcess.WindowHandle, chromeProcess.Path, chromeProcess.LastUsed));
             }
         }
 
@@ -343,6 +429,9 @@ namespace DLab.ViewModels
         }
 
         private List<ProcessItem> _tempItems = new List<ProcessItem>();
+        private CancellationTokenSource _chromeTabCancellationToken;
+        private List<ProcessItem> _chromeTabs;
+        private CancellationTokenSource _mainCancellationTokenSource;
 
         public bool EnumWindowCallback(IntPtr windowHandle, IntPtr lParam)
         {
