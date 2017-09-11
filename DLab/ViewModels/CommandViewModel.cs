@@ -26,12 +26,13 @@ namespace DLab.ViewModels
         private MatchResult _selectedMatch;
         private ILog _log;
 
-        public CommandViewModel(IAppServices appServices, CommandResolver commandResolver)
+        public CommandViewModel(IAppServices appServices, CommandResolver commandResolver, CommandResultViewModel commandResultViewModel)
         {
             _eventAggregator = appServices.EventAggregator;
             _log = appServices.Log;
             _appServices = appServices;
             _commandResolver = commandResolver;
+            CommandResult = commandResultViewModel;
             _eventAggregator.Subscribe(this);
             _matchedItems = new BindableCollection<MatchResult>();
             DisplayName = "Command";
@@ -58,19 +59,21 @@ namespace DLab.ViewModels
                 _userCommand = value;
                 NotifyOfPropertyChange();
 
-                var r = new List<MatchResult>();
+                var matchResults = new List<MatchResult>();
 
                 if (!string.IsNullOrEmpty(_userCommand))
                 {
-                    r = _commandResolver.GetMatches(_userCommand, 10);
+                    matchResults = _commandResolver.GetMatches(_userCommand, 10);
                 }
                 MatchedItems.Clear();
-                if (!r.Any()) return;
-                MatchedItems.AddRange(r);
+                if (!matchResults.Any()) return;
+                MatchedItems.AddRange(matchResults);
                 SelectedMatchedItem = MatchedItems.First();
                 EnhanceWithIconAsync();
             }
         }
+
+        public CommandResultViewModel CommandResult { get; }
 
         private async void EnhanceWithIconAsync()
         {

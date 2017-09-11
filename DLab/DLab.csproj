@@ -153,6 +153,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\ClipboardItemViewModel.cs" />
+    <Compile Include="ViewModels\CommandResultViewModel.cs" />
     <Compile Include="ViewModels\Folder.cs" />
     <Compile Include="ViewModels\FolderExtensions.cs" />
     <Compile Include="ViewModels\FolderSpecViewModel.cs" />
@@ -191,6 +192,9 @@
     <Compile Include="ViewModels\WebSpecViewModel.cs" />
     <Compile Include="Views\ClipboardView.xaml.cs">
       <DependentUpon>ClipboardView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\CommandResultView.xaml.cs">
+      <DependentUpon>CommandResultView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Command\List.xaml.cs">
       <DependentUpon>List.xaml</DependentUpon>
@@ -265,6 +269,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\ClipboardView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\CommandResultView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

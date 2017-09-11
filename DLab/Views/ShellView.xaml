@@ -43,7 +43,6 @@
                 </Setter>
             </Style>
         </ResourceDictionary>
-
     </Window.Resources>
 
     <Grid>

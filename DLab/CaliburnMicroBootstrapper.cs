@@ -78,6 +78,7 @@ namespace DLab
                 x.For<SettingsDirViewModel>().Use<SettingsDirViewModel>();
                 x.For<SettingsRunnerViewModel>().Use<SettingsRunnerViewModel>();
                 x.For<SettingsHyperViewModel>().Use<SettingsHyperViewModel>();
+                x.For<CommandResultViewModel>().Use<CommandResultViewModel>();
                 x.For<FileCommandsRepo>().Use<FileCommandsRepo>().Singleton();
                 x.For<FolderSpecRepo>().Use<FolderSpecRepo>().Singleton();
                 x.For<WebSpecRepo>().Use<WebSpecRepo>().Singleton();
